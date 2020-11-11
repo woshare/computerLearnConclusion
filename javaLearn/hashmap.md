@@ -1,6 +1,15 @@
 ## HashMap
 
-[toc]
+- [HashMap](#hashmap)
+    - [hash](#hash)
+        - [处理冲突的方法](#%E5%A4%84%E7%90%86%E5%86%B2%E7%AA%81%E7%9A%84%E6%96%B9%E6%B3%95)
+    - [hashmap](#hashmap)
+        - [hashmap特性简介](#hashmap%E7%89%B9%E6%80%A7%E7%AE%80%E4%BB%8B)
+        - [hashmap数据结构简介](#hashmap%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%AE%80%E4%BB%8B)
+        - [红黑树特性简介](#%E7%BA%A2%E9%BB%91%E6%A0%91%E7%89%B9%E6%80%A7%E7%AE%80%E4%BB%8B)
+        - [重要参数](#%E9%87%8D%E8%A6%81%E5%8F%82%E6%95%B0)
+        - [源码简要解析](#%E6%BA%90%E7%A0%81%E7%AE%80%E8%A6%81%E8%A7%A3%E6%9E%90)
+    - [hashmap,linkedhashmap,treemap,concurrenthashmap](#hashmaplinkedhashmaptreemapconcurrenthashmap)
 
 ### hash
 
@@ -11,23 +20,25 @@
 >4，建立公共溢出区：将哈希表分为基本表和溢出表两部分，凡是和基本表发生冲突的元素，一律填入溢出表          
 >5，红黑树                     
 
-### hashmap特性简介
+### hashmap
+
+#### hashmap特性简介
 ```
 public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneable, Serializable
 
 public abstract class AbstractMap<K,V> implements Map<K,V>
 
 public interface Map<K,V>
- ```   
+```   
 ![Alt text](./res/hashmap-character.png  "hashmap特性简介")
 
-### hashmap数据结构简介
+#### hashmap数据结构简介
 ![Alt text](./res/hashmap.jpg "hashmap数据结构简介")
 
-### 红黑树特性简介
+#### 红黑树特性简介
 ![Alt text](./res/red-back-tree.png  "红黑树特性简介")
 
-### 重要参数
+#### 重要参数
 ```
 //默认容量 = 16 
 static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
@@ -54,7 +65,7 @@ static final int MIN_TREEIFY_CAPACITY = 64;
 
 ![Alt text](./res/loadFactor.jpg "加载因子比较")
 
-### 源码简要解析
+#### 源码简要解析
 ```
 
  public V put(K key, V value) {
@@ -113,7 +124,7 @@ static final int MIN_TREEIFY_CAPACITY = 64;
     }
 ```
 
-### hashmap,linkedhashmap,treemap
+### hashmap,linkedhashmap,treemap,concurrenthashmap
 >1，HashMap取出的时候是随机的,是最常用的一个Map.根据键的HashCode值存储数据,根据键直接获取它的值，具有很快的访问速度。在Map中插入、删除和定位元素，HashMap 是最好的选择。    
 >2，TreeMap取出来的是排序后的键值对。但如果您要按自然顺序或自定义顺序遍历键，那么TreeMap会更好。   
 >3，LinkedHashMap（桶内同一位置元素集为双向链表） 是HashMap的一个子类，如果需要输出的顺序和输入的相同,那么用LinkedHashMap可以实现。    
