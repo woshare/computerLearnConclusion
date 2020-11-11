@@ -1,13 +1,15 @@
 ## HashMap
 
+[toc]
+
 ### hash
 
 #### 处理冲突的方法
->1，开放定址法：产生冲突之后去寻找下一个空闲的空间（线性探测法，平方探测）
->2，链表法：散列到同一位置的元素，在这个位置是创建一个链表
->3，再散列：一直hash直到冲突不再发生
->4，建立公共溢出区：将哈希表分为基本表和溢出表两部分，凡是和基本表发生冲突的元素，一律填入溢出表
->5，红黑树
+>1，开放定址法：产生冲突之后去寻找下一个空闲的空间（线性探测法，平方探测）     
+>2，链表法：散列到同一位置的元素，在这个位置是创建一个链表         
+>3，再散列：一直hash直到冲突不再发生             
+>4，建立公共溢出区：将哈希表分为基本表和溢出表两部分，凡是和基本表发生冲突的元素，一律填入溢出表          
+>5，红黑树                     
 
 ### hashmap特性简介
 ```
@@ -18,7 +20,6 @@ public abstract class AbstractMap<K,V> implements Map<K,V>
 public interface Map<K,V>
  ```   
 ![Alt text](./res/hashmap-character.png  "hashmap特性简介")
-
 
 ### hashmap数据结构简介
 ![Alt text](./res/hashmap.jpg "hashmap数据结构简介")
@@ -115,4 +116,4 @@ static final int MIN_TREEIFY_CAPACITY = 64;
 ### hashmap,linkedhashmap,treemap
 >1，HashMap取出的时候是随机的,是最常用的一个Map.根据键的HashCode值存储数据,根据键直接获取它的值，具有很快的访问速度。在Map中插入、删除和定位元素，HashMap 是最好的选择。    
 >2，TreeMap取出来的是排序后的键值对。但如果您要按自然顺序或自定义顺序遍历键，那么TreeMap会更好。   
->3，LinkedHashMap 是HashMap的一个子类，如果需要输出的顺序和输入的相同,那么用LinkedHashMap可以实现。    
+>3，LinkedHashMap（桶内同一位置元素集为双向链表） 是HashMap的一个子类，如果需要输出的顺序和输入的相同,那么用LinkedHashMap可以实现。    
