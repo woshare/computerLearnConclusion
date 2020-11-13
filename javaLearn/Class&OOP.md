@@ -31,3 +31,13 @@ interface INF {
 ```
 
 #### 接口在应用中常见的三种模式：策略模式、适配器模式和工厂模式
+
+### extends (延伸) & impliment （实现）
+>1，Extends可以理解为全盘继承了父类的功能
+>2，implements可以理解为为这个类附加一些额外的功能
+>3，interface定义一些方法,并没有实现,需要implements来实现才可用
+>4，extend可以继承一个接口,但仍是一个接口,也需要implements之后才可用
+>5，对于class而言，Extends用于(单)继承一个类（class），而implements用于实现一个接口(interface)
+>6，JAVA中不支持多重继承，继承只能继承一个类，但implements可以实现多个接口，比如 class A extends B implements C,D,E
+>7，implements，实现父类，子类不可以覆盖父类的方法或者变量。即使子类定义与父类相同的变量或者函数，也会被父类取代掉   
+>8，implements一般是实现接口。extends 是继承类
