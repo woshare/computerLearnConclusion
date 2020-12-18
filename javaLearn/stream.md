@@ -64,6 +64,34 @@ Stream操作分类 |  | |
 ![stream相关继承和实现](./res/Java_stream_pipeline_classes.png "直白的stream pipeline方案")
 
 
+## stream 执行
+
+>1，垂直执行
+```
+Stream.of("d2", "a2", "b1", "b3", "c")
+    .filter(s -> {
+        System.out.println("filter: " + s);
+        return true;
+    })
+    .forEach(s -> System.out.println("forEach: " + s));
+
+结果：
+filter:  d2
+forEach: d2
+filter:  a2
+forEach: a2
+filter:  b1
+forEach: b1
+filter:  b3
+forEach: b3
+filter:  c
+forEach: c
+```
+
+>2，水平执行：例如sorted
+
+## Java8 Stream 流是不能被复用的，一旦你调用任何终端操作，流就会关闭
+
 ## 为什么要引入 stream
 * [stream讲解-很不错](https://zhuanlan.zhihu.com/p/47478339)
 * [stream讲解-很不错](https://objcoding.com/2019/03/04/lambda/#streams-apii)

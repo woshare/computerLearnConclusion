@@ -16,6 +16,10 @@ public final class String
     }
 ```
 
+### 长度
+>1，String str1="xxxx";//因为是在常量区，根据jvm常量区规范length 类型是u2，2个字节的无符号整型，即这种情况是2的16次方-1=65535，再加上1个字节的jvm结束符，最长65534个字节
+>如果是运行时拼接，则是int的最大范围2的32次方-1
+
 ## String、StringBuffer和StringBuilder的区别
 ### 1，可变性
 >1，为了线程安全和JVM缓存速度，String 对象是不可变的（被final修饰）。>2，StringBuilder 与 StringBuffer 都继承自 AbstractStringBuilder 类，在 AbstractStringBuilder 中也是使用字符数组保存字符串char[]value 但是没有用 final 关键字修饰，所以这两种对象都是可变的
