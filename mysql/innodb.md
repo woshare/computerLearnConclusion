@@ -89,6 +89,7 @@ redolog两阶段提交：为了让binlog跟redolog两份日志之间的逻辑一
 ### 主从复制
 ![Alt text](./res/master-slave.png "主从复制")
 
+
 >mysql默认的复制方式是异步的，并且复制的时候是有并行复制能力的。主库把日志发送给从库后不管了，这样会产生一个问题就是假设主库挂了，从库处理失败了，这时候从库升为主库后，日志就丢失了。由此产生两个概念。
 
 #### 全同步复制
@@ -96,6 +97,16 @@ redolog两阶段提交：为了让binlog跟redolog两份日志之间的逻辑一
 
 #### 半同步复制
 半同步复制的逻辑是这样，从库写入日志成功后返回ACK确认给主库，主库收到至少一个从库的确认就认为写操作完成。
+
+![Alt text](./res/master-slave2.png "主从复制")
+>1，master提交完事务后，写入binlog
+>2，slave连接到master，获取binlog
+>3，master创建dump线程，推送binglog到slave
+>4，slave启动一个IO线程读取同步过来的master的binlog，记录到relay log中继日志中
+>5，slave再开启一个sql线程读取relay log事件并在slave执行，完成同步
+>6，slave记录自己的binglog
+
+
 
 ## InnoDB中的锁
 
@@ -160,3 +171,13 @@ redolog两阶段提交：为了让binlog跟redolog两份日志之间的逻辑一
 >7、将binlog文件和位置写入到redo日志文件中，并写入commit。
 >8、后台的IO线程某个时间随机将buffer pool中的脏数据同步到磁盘文件。
 
+
+## 锁
+-共享锁 
+-排他锁---表锁
+        行锁--->乐观锁：基于版本号
+                悲观锁：for update
+
+
+
+![Alt text](./res/mysql-search-process.jpg "查询过程")
