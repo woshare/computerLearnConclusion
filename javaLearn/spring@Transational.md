@@ -1,5 +1,8 @@
 # Springboot @Transactional注解
 
+
+* [springboot事务详解-不错](https://juejin.cn/post/6844904003218718733#heading-3)
+
 ## 使用原则---小心事务没生效
 
 >1，原则一：public方法才能生效，因为spring是默认通过动态代理实现的AOP，private方法无法代理
@@ -9,7 +12,7 @@
 
 
 ### 原则二的几种方式
->1，从contoller层调用目标方法
+>1，常用的一种，从contoller层调用目标方法
 ```
 XXServiceImpl{
     @Transactional(rollbackFor=Exception.class)
@@ -30,7 +33,7 @@ XXServiceImpl{
 }
 
 ```
->2，从contoller层调用目标方法
+>2，在serverImpl内Autowired自身，或通过getBean，获取代理增强的对象
 ```
 XXServiceImpl{
     @Transactional(rollbackFor=Exception.class)
