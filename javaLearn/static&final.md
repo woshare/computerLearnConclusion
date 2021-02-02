@@ -28,4 +28,35 @@
 
 
 #### 内联inline是什么，为什么性能就高?
->1，其实就是在内联方法调用的地方，用方法对应的代码块替换，减少函数调用的切换，以得到高性能，对高频调用的方法，加上final，会被jvm优化成内联
+>1，其实就是在内联方法调用的地方，用方法对应的代码块替换，减少函数调用的切换，以得到高性能，对高频调用的方法，加上final，会被jvm优化成内联    
+
+
+## static
+
+
+### 静态代码块
+```
+public class HelloA {
+    public HelloA(){//构造函数
+        System.out.println("A的构造函数");    
+    }
+    {//构造代码块
+        System.out.println("A的构造代码块");    
+    }
+    static {//静态代码块
+        System.out.println("A的静态代码块");        
+    }
+    public static void main(String[] args) {
+        HelloA a=new HelloA();
+        HelloA b=new HelloA();
+    }
+
+}
+
+运行结果：
+A的静态代码块
+A的构造代码块
+A的构造函数
+A的构造代码块
+A的构造函数
+```
