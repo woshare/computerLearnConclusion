@@ -133,7 +133,8 @@ class TaskQueue {
     }
 }
 ```
-
+![Alt text](./res/condition-await.png "")
+![Alt text](./res/condition-signal.png "")
 ## AQS
 
 ### Node:实现FIFO双向链表
@@ -235,9 +236,9 @@ public class Point {
         long stamp = stampedLock.tryOptimisticRead(); // 获得一个乐观读锁
         // 注意下面两行代码不是原子操作
         // 假设x,y = (100,200)
-        double currentX = x;
+        double currentX = x;           //第2步
         // 此处已读取到x=100，但x,y可能被写线程修改为(300,400)
-        double currentY = y;
+        double currentY = y;           //第3步
         // 此处已读取到y，如果没有写入，读取是正确的(100,200)
         // 如果有写入，读取是错误的(100,400)
         if (!stampedLock.validate(stamp)) { // 检查乐观读锁后是否有其他写锁发生
@@ -250,6 +251,12 @@ public class Point {
             }
         }
         return Math.sqrt(currentX * currentX + currentY * currentY);
+    }
+
+//Unsafe.java:
+     public boolean validate(long stamp) {
+        U.loadFence();//在校验逻辑之前，会通过Unsafe的loadFence方法加入一个load内存屏障，目的是避免如上用例中步骤2,3和StampedLock.validate中锁状态校验运算发生重排序导致锁状态校验不准确的问题。
+        return (stamp & SBITS) == (state & SBITS);
     }
 }
 ```
