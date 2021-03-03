@@ -4,11 +4,12 @@
 >2，基于最少活跃调用数算法的 LeastActiveLoadBalance
 >3，基于 hash 一致性的 ConsistentHashLoadBalance
 >4，基于加权轮询算法的 RoundRobinLoadBalance
+>5，基于权重最快应答算法的ShortestResponseLoadBalance，类似LeastActiveLoadBalance
 
 * [apache dubbo 负载均衡算法源码介绍](https://dubbo.apache.org/zh/docs/v2.7/dev/source/loadbalance/)
 
 ```
-AbstractLoadBalance {
+public abstract class AbstractLoadBalance implements LoadBalance {
 
 @Override
 public <T> Invoker<T> select(List<Invoker<T>> invokers, URL url, Invocation invocation) {
@@ -49,7 +50,7 @@ protected abstract <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, I
 
 ![](./res/consistent-hash-invoker.jpg "")
 
-![](consistent-hash-data-incline.jpg "")
+![](./res/consistent-hash-data-incline.jpg "")
 
 
 
