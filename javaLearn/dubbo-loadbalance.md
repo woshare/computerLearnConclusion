@@ -52,6 +52,12 @@ protected abstract <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, I
 
 ![](./res/consistent-hash-data-incline.jpg "")
 
+#### 虚拟节点
+>为什么要有虚拟节点的概念呢?我们还是回到第一个假设,我们还是有a,b,c,d四个节点,他们通过某个规则转化成0,3,6,9这种自然是均匀的.但是万一是0,1,2,3这样,那就是非常不均匀了.事实上, 一般的Hash函数对于节点在圆环上的映射,并不均匀.所以我们需要引入虚拟节点,那么什么是虚拟节点呢?
+>假如有N个真实节点,把每个真实节点映射成M个虚拟节点,再把 M*N 个虚拟节点, 散列在圆环上. 各真实节点对应的虚拟节点相互交错分布这样,某真实节点down后,则把其影响平均分担到其他所有节点上.也就是a,b,c,d的虚拟节点a0,a1,a2,b0,b1,b2,c0,c1,c2,d0,d1,d2散落在圆环上,假设C号节点down,则c0,c1,c2的压力分别传给d0,a1,b1,如下图
+
+![](./res/consistent-hash-example.jpg "")
+
 
 
 ### 基于加权轮询算法的 RoundRobinLoadBalance

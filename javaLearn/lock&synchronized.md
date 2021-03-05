@@ -20,6 +20,11 @@
 >3，同步方法块，锁是synchronized(xx) 这个xx对象
 
 
+>修饰方法的时候在 flag 上标记 ACCSYNCHRONIZED，在运行时常量池中通过 ACCSYNCHRONIZED 标志来区分，这样 JVM 就知道这个方法是被 synchronized 标记的，于是在进入方法的时候就会进行执行争锁的操作，一样只有拿到锁才能继续执行
+>Synchronized 修饰代码块时，此时编译得到的字节码会有 monitorenter 和 monitorexit 指令
+* [synchronized jvm源码讲解](https://xie.infoq.cn/article/d9479ba8900bd7645c035d006?utm_source=home_write_related&utm_medium=article)
+
+
 ![对象头](./res/java-object-head.png "对象头")
 
 ![32bit-markword状态变化](./res/32bit-markword-change.png "32bit-markword状态变化")
