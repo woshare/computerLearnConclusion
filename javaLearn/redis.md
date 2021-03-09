@@ -1,5 +1,7 @@
 # redis
 
+* [redis 阿里建议使用规范](https://www.infoq.cn/article/K7dB5AFKI9mr5Ugbs_px)
+
 ## Redis的内存淘汰策略：六种
 
 >Redis的内存淘汰策略是指在Redis的用于缓存的内存不足时，怎么处理需要新写入且需要申请额外空间的数据。
@@ -67,3 +69,154 @@
  RDB | RDB是一个紧凑压缩的二进制文件，代表Redis在某个时间点上的数据 快照。非常适用于备份，全量复制等场景。与 AOF 格式的文件相比，RDB 文件可以更快的重启。RDB 对灾难恢复非常有用，它是一个紧凑的文件，可以更快的传输到远程服务器进行 Redis 服务恢复 |RDB方式数据没办法做到实时持久化/秒级持久化，RDB只能保存某个时间间隔的数据，如果在这个期间Redis故障了，就会丢失一段时间的数据。RDB方式数据没办法做到实时持久化/秒级持久化。因为bgsave每次运 行都要执行fork操作创建子进程，属于重量级操作，频繁执行成本过高。
  AOF | 意外情况下，丢失数据不多,具有一定实时性 | 对于相同的数据集来说，AOF 文件要大于 RDB 文件，从理论上说，RDB 比 AOF 更健壮
  混合 | 混合持久化结合了 RDB 和 AOF 持久化的优点，开头为 RDB 的格式，使得 Redis 可以更快的启动，同时结合 AOF 的优点，有减低了大量数据丢失的风险 | AOF 文件中添加了 RDB 格式的内容，会使得 AOF 文件的可读性会很差，不容易阅读； 如果开启混合持久化，就必须使用Redis 4.0 以及之后版本
+
+
+
+
+## Redis为什么采用跳表而不是红黑树
+>1，在做范围查找的时候，平衡树比skiplist操作要复杂。
+
+### 跳表结构  vs 红黑树结构
+
+## 有的key在删除时，可能导致内存没有及时释放
+>当键被删除时，Redis并不总是释放(返回)内存到操作系统
+
+### Hash 删除: hscan + hdel
+```
+public void delBigHash(String host, int port, String password, String bigHashKey) {
+    Jedis jedis = new Jedis(host, port);
+    if (password != null && !"".equals(password)) {
+        jedis.auth(password);
+    }
+    ScanParams scanParams = new ScanParams().count(100);
+    String cursor = "0";
+    do {
+        ScanResult<Entry<String, String>> scanResult = jedis.hscan(bigHashKey, cursor, scanParams);
+        List<Entry<String, String>> entryList = scanResult.getResult();
+        if (entryList != null && !entryList.isEmpty()) {
+            for (Entry<String, String> entry : entryList) {
+                jedis.hdel(bigHashKey, entry.getKey());
+            }
+        }
+        cursor = scanResult.getStringCursor();
+    } while (!"0".equals(cursor));
+    
+    //删除bigkey
+    jedis.del(bigHashKey);
+}
+
+```
+
+### List 删除: ltrim
+```
+public void delBigList(String host, int port, String password, String bigListKey) {
+    Jedis jedis = new Jedis(host, port);
+    if (password != null && !"".equals(password)) {
+        jedis.auth(password);
+    }
+    long llen = jedis.llen(bigListKey);
+    int counter = 0;
+    int left = 100;
+    while (counter < llen) {
+        //每次从左侧截掉100个
+        jedis.ltrim(bigListKey, left, llen);
+        counter += left;
+    }
+    //最终删除key
+    jedis.del(bigListKey);
+}
+
+```
+
+
+### Set 删除: sscan + srem
+```
+public void delBigSet(String host, int port, String password, String bigSetKey) {
+    Jedis jedis = new Jedis(host, port);
+    if (password != null && !"".equals(password)) {
+        jedis.auth(password);
+    }
+    ScanParams scanParams = new ScanParams().count(100);
+    String cursor = "0";
+    do {
+        ScanResult<String> scanResult = jedis.sscan(bigSetKey, cursor, scanParams);
+        List<String> memberList = scanResult.getResult();
+        if (memberList != null && !memberList.isEmpty()) {
+            for (String member : memberList) {
+                jedis.srem(bigSetKey, member);
+            }
+        }
+        cursor = scanResult.getStringCursor();
+    } while (!"0".equals(cursor));
+    
+    //删除bigkey
+    jedis.del(bigSetKey);
+}
+
+```
+
+### SortedSet 删除: zscan + zrem
+```
+public void delBigZset(String host, int port, String password, String bigZsetKey) {
+    Jedis jedis = new Jedis(host, port);
+    if (password != null && !"".equals(password)) {
+        jedis.auth(password);
+    }
+    ScanParams scanParams = new ScanParams().count(100);
+    String cursor = "0";
+    do {
+        ScanResult<Tuple> scanResult = jedis.zscan(bigZsetKey, cursor, scanParams);
+        List<Tuple> tupleList = scanResult.getResult();
+        if (tupleList != null && !tupleList.isEmpty()) {
+            for (Tuple tuple : tupleList) {
+                jedis.zrem(bigZsetKey, tuple.getElement());
+            }
+        }
+        cursor = scanResult.getStringCursor();
+    } while (!"0".equals(cursor));
+    
+    //删除bigkey
+    jedis.del(bigZsetKey);
+}
+
+```
+
+## 主从同步
+
+>主从同步分为 2 个步骤：同步和命令传播
+>1，同步：将从服务器的数据库状态更新成主服务器当前的数据库状态。同步RDB
+>2，命令传播：当主服务器数据库状态被修改后，导致主从服务器数据库状态不一致，此时需要让主从数据同步到一致的过程。同步aof操作
+
+![主从同步](./res/redis-master-slave-sync.jpg "")
+
+## 集群机制
+
+### 主从模式:读写分离
+
+![](./res/redis-master-slave.png "")
+
+>主从模式难以在线扩容的缺点，Redis的容量受限于单机配置，是因为master 一个单机负责读写，slave负责读
+
+### sentinel哨兵机制
+
+>哨兵模式解决了主从复制不能自动故障转移，达不到高可用的问题，但还是存在难以在线扩容，Redis容量受限于单机配置的问题
+
+![](./res/redis-sentinel.png "")
+
+### cluster模式
+
+>Cluster模式实现了Redis的分布式存储，即每台节点存储不同的内容，来解决在线扩容的问题
+>能够实现自动故障转移，节点之间通过gossip协议交换状态信息，用投票机制完成slave到master的角色转换
+>无中心架构，数据按照slot分布在多个节点
+>集群中的每个节点都是平等的关系，每个节点都保存各自的数据和整个集群的状态。每个节点都和其他所有节点连接，而且这些连接保持活跃，这样就保证了我们只需要连接集群中的任意一个节点，就可以获取到其他节点的数据
+
+
+#### Cluster模式的具体工作机制：
+
+>1，在Redis的每个节点上，都有一个插槽（slot），取值范围为0-16383
+当我们存取key的时候，Redis会根据CRC16的算法得出一个结果，然后把结果对16384求余数，这样每个key都会对应一个编号在0-16383之间的哈希槽，通过这个值，去找到对应的插槽所对应的节点，然后直接自动跳转到这个对应的节点上进行存取操作
+>2，为了保证高可用，Cluster模式也引入主从复制模式，一个主节点对应一个或者多个从节点，当主节点宕机的时候，就会启用从节点
+>3，当其它主节点ping一个主节点A时，如果半数以上的主节点与A通信超时，那么认为主节点A宕机了。如果主节点A和它的从节点都宕机了，那么该集群就无法再提供服务了
+>4，Cluster模式集群节点最小配置6个节点(3主3从，因为需要半数以上)，其中主节点提供读写操作，**从节点作为备用节点，不提供请求，只作为故障转移使用**
+
+![](./res/redis-cluster.png "")
