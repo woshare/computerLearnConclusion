@@ -1,5 +1,9 @@
 # kafka
 
+* [淘宝 RocketMQ 与 Kafka 对比](https://toutiao.io/posts/sodl0/preview)
+
+>在大数据分布式文件系统里面，95% 的都是主从式的架构，个别是对等式的架构
+
 >消息队列已经逐渐成为企业IT系统内部通信的核心手段。它具有低耦合、可靠投递、广播、流量控制、最终一致性等一系列功能，成为异步RPC的主要手段之一
 >消息队列不是万能的。对于需要强事务保证而且延迟敏感的，RPC是优于消息队列的
 >所谓消息队列，无外乎两次RPC加一次转储，当然需要消费端最终做消费确认的情况是三次RPC。既然是RPC，就必然牵扯出一系列话题，什么负载均衡啊、服务发现啊、通信协议啊、序列化协议啊
@@ -34,3 +38,52 @@
 
 
 在一个kafka集群中，大多数 consumer 消费时，您将看不到磁盘上的读取活动，因为数据将完全由缓存提供
+
+
+## comsumer group
+>1,如果一个消费组的消费者大于分区数，那么相当于多余的消费者是一种浪费，多余的消费者将无法消费消息。
+>2,如果一个消费组的消费者小于分区数，会有对应的消费者分区分配策略。一种是Range（默认），一种是RoundRobin（轮询），当然也可以自定义策略
+>3,建议：配置分区数是消费者数的整数倍
+
+* [kafka大概介绍-可以看看](https://www.cnblogs.com/GrimMjx/p/11523067.html)
+
+## partition 分区
+>一个主题下面有多个分区，这些分区会存储到不同的服务器上面，或者说，其实就是在不同的主机上建了不同的目录。这些分区主要的信息就存在了 .log 文件里面。跟数据库里面的分区差不多，是为了提高性能。
+
+>Producer(消息发送者)的往消息Server的写入并发数与分区数成正比。
+>Consumer(消息消费者)消费某个Topic的并行度与分区数保持一致，假设分区数是20，那么Consumer的消费并行度最大为20。
+>每个Topic由固定数量的分区数组成，分区数的多少决定了单台Broker能支持的Topic数量，Topic数量又决定了支持的业务数量
+
+
+## Replica 副本
+>需要注意：Kafka 在 0.8 版本以前是没有副本机制的，所以在面对服务器宕机的突发情况时会丢失数据，所以尽量避免使用这个版本之前的 Kafka
+
+![](./res/kafka-partition-replica.png "")
+
+![](./res/kafka-replica-leader-follow.png "注意看leader和follow，同一topic不同分区有leader和follow之分，消费者主要和leader直连")
+
+## topic
+
+![](./res/kafka-topic.png "")
+
+## Kafka 性能好在什么地方？
+>顺序写
+>零拷贝
+
+![](./res/kafka-fs-no-zero-copy.jpg "需要拷贝的方式")
+
+![](./res/kafka-fs-zero-copy.jpg "零拷贝的方式-Kafka 利用了 Linux 的 sendFile 技术（NIO），省去了进程切换和一次数据拷贝，让性能变得更好")
+
+## 写日志
+
+![](./res/kafka_server_write_log.png "")
+
+
+## Q&S
+>1，分区增加，在不同broker下的分区数据怎么调整
+
+>2，为什么Kafka不能支持更多的分区数？
+>每个分区存储了完整的消息数据，虽然每个分区写入是磁盘顺序写，但是多个分区同时顺序写入在操作系统层面变为了随机写入。
+>由于数据分散为多个文件，很难利用IO层面的Group Commit机制，网络传输也会用到类似优化算法
+
+* [ONS(RocketMQ)为什么能够比Kafka支持更多的分区数量？](https://developer.aliyun.com/article/105)
