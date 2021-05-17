@@ -95,7 +95,7 @@ if (obj == null) {
 ```
 * [instanceof 官方算法](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.instanceof)
 
-## spring @Transactional事务实现基本源码：TransactionInterceptor–最终事务管理者
+## spring @Transactional事务实现基本源码：TransactionInterceptor–最终事务管理者，如果有@Transactional注解的方法都会调用这个地方
 ```
 public class TransactionInterceptor extends TransactionAspectSupport implements MethodInterceptor, Serializable {
 ...
@@ -337,6 +337,86 @@ private class UOWActionAdapter<T> implements UOWAction, SmartTransactionObject {
 }
 ```
 
+## mapper.sqlMethod 会动态代理，调用SqlSessionTemplate 中的invoke ，SqlSession sqlSession = SqlSessionUtils.getSqlSession 则是通过NameThreadLocal中获取sqlSession，同一个事务中sqlSession，以及org.mybatis.spring.SqlSessionHolder 是同一个，就算是service1中调用了service2，其中，org.apache.ibatis.session.defaults.DefaultSqlSessionFactory应该是全局唯一的
+```
+public class SqlSessionTemplate implements SqlSession, DisposableBean {
+  private final SqlSessionFactory sqlSessionFactory;
+  private final ExecutorType executorType;
+  private final SqlSession sqlSessionProxy;
+  private final PersistenceExceptionTranslator exceptionTranslator;
+
+private class SqlSessionInterceptor implements InvocationHandler {
+    private SqlSessionInterceptor() {
+    }
+
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      SqlSession sqlSession = SqlSessionUtils.getSqlSession(SqlSessionTemplate.this.sqlSessionFactory, SqlSessionTemplate.this.executorType, SqlSessionTemplate.this.exceptionTranslator);
+
+      Object unwrapped;
+      try {
+        Object result = method.invoke(sqlSession, args);
+        if (!SqlSessionUtils.isSqlSessionTransactional(sqlSession, SqlSessionTemplate.this.sqlSessionFactory)) {
+          sqlSession.commit(true);
+        }
+
+        unwrapped = result;
+      } catch (Throwable var11) {
+        unwrapped = ExceptionUtil.unwrapThrowable(var11);
+        if (SqlSessionTemplate.this.exceptionTranslator != null && unwrapped instanceof PersistenceException) {
+          SqlSessionUtils.closeSqlSession(sqlSession, SqlSessionTemplate.this.sqlSessionFactory);
+          sqlSession = null;
+          Throwable translated = SqlSessionTemplate.this.exceptionTranslator.translateExceptionIfPossible((PersistenceException)unwrapped);
+          if (translated != null) {
+            unwrapped = translated;
+          }
+        }
+
+        throw (Throwable)unwrapped;
+      } finally {
+        if (sqlSession != null) {
+          SqlSessionUtils.closeSqlSession(sqlSession, SqlSessionTemplate.this.sqlSessionFactory);
+        }
+
+      }
+
+      return unwrapped;
+    }
+  }
+
+}
+```
+## SqlSessionHolder 会注册保存到NameThreadLocal，通过sqlSessionHolder来执行sqlSession
+
+```
+private static void registerSessionHolder(SqlSessionFactory sessionFactory, ExecutorType executorType, PersistenceExceptionTranslator exceptionTranslator, SqlSession session) {
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      Environment environment = sessionFactory.getConfiguration().getEnvironment();
+      if (environment.getTransactionFactory() instanceof SpringManagedTransactionFactory) {
+        LOGGER.debug(() -> {
+          return "Registering transaction synchronization for SqlSession [" + session + "]";
+        });
+        SqlSessionHolder holder = new SqlSessionHolder(session, executorType, exceptionTranslator);
+        TransactionSynchronizationManager.bindResource(sessionFactory, holder);
+        TransactionSynchronizationManager.registerSynchronization(new SqlSessionUtils.SqlSessionSynchronization(holder, sessionFactory));
+        holder.setSynchronizedWithTransaction(true);
+        holder.requested();
+      } else {
+        if (TransactionSynchronizationManager.getResource(environment.getDataSource()) != null) {
+          throw new TransientDataAccessResourceException("SqlSessionFactory must be using a SpringManagedTransactionFactory in order to use Spring transaction synchronization");
+        }
+
+        LOGGER.debug(() -> {
+          return "SqlSession [" + session + "] was not registered for synchronization because DataSource is not transactional";
+        });
+      }
+    } else {
+      LOGGER.debug(() -> {
+        return "SqlSession [" + session + "] was not registered for synchronization because synchronization is not active";
+      });
+    }
+
+  }
+```
 ![Alt text](./res/spring-bean-aop-transactional.png "事务基本原理")
 
 

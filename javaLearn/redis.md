@@ -1,6 +1,7 @@
 # redis
 
 * [redis 阿里建议使用规范](https://www.infoq.cn/article/K7dB5AFKI9mr5Ugbs_px)
+* [redis数据结构描述-不错](https://i6448038.github.io/2019/12/01/redis-data-struct/)
 
 ## Redis的内存淘汰策略：六种
 
@@ -220,3 +221,88 @@ public void delBigZset(String host, int port, String password, String bigZsetKey
 >4，Cluster模式集群节点最小配置6个节点(3主3从，因为需要半数以上)，其中主节点提供读写操作，**从节点作为备用节点，不提供请求，只作为故障转移使用**
 
 ![](./res/redis-cluster.png "")
+
+
+## 跳表skiplist
+>跳跃表在 Redis 的唯一作用， 就是实现有序集数据类型
+
+```
+typedef struct zskiplist {
+
+    // 头节点，尾节点
+    struct zskiplistNode *header, *tail;
+
+    // 节点数量
+    unsigned long length;
+
+    // 目前表内节点的最大层数
+    int level;
+
+} zskiplist;
+
+typedef struct zskiplistNode {
+
+    // member 对象
+    robj *obj;
+
+    // 分值
+    double score;
+
+    // 后退指针
+    struct zskiplistNode *backward;
+
+    // 层
+    struct zskiplistLevel {
+
+        // 前进指针
+        struct zskiplistNode *forward;
+
+        // 这个层跨越的节点数量
+        unsigned int span;
+
+    } level[];
+
+} zskiplistNode;
+```
+```
+redis> ZADD s 6 x 10 y 15 z
+(integer) 3
+
+redis> ZRANGE s 0 -1 WITHSCORES
+1) "x"
+2) "6"
+3) "y"
+4) "10"
+5) "z"
+6) "15"
+```
+
+![](./res/redis-skiplist.svg "")
+
+
+![](./res/redis-skiplist.png "")
+
+## 迁移
+
+### rdb方案
+```
+# 链接redis
+$ redis-cli -u 127.0.0.1 -p 6379 -a 你的密码 
+# 执行持久化
+$ 127.0.0.1:6379> bgsave
+# 查看文件位置
+$ 127.0.0.1:6379> config get dir   //复制 redis数据目录/dump.rdb 到另一台redis的数据目录下，启动即可
+
+aof:再同步增量数据
+# 设置appendonly yes
+$ 127.0.0.1:6379> config set appendonly yes //redis的数据目录 看到 appendonly.aof 文件
+
+# 目标redis
+$ redis-cli -h aliyun_redis_instance_ip -p 6379 -a password --pipe < appendonly.aof
+```
+
+### 工具
+>redis-dump
+>redis-shark
+
+![](./res/redis-shark.png "")

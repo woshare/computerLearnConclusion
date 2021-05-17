@@ -26,6 +26,7 @@ select * from user where name=’a’ union all select * from user where age=’
 >18，明知只有一条查询结果，那请使用 “LIMIT 1”，避免全表扫描
 >19，索引数量，一般不要超过5个
 >20，尽可能使用varchar/nvarchar 代替 char/nchar。首先变长字段存储空间小，可以节省存储空间
+>21，除非确实需要服务器去重，否则就一定要使用UNION ALL，如果没有ALL关键字，MySQL会给临时表加上DISTINCT选项，这会导致整个临时表的数据做唯一性检查，这样做的代价非常高   
 
 ## 优化工具与方法
 >1，explain
@@ -35,3 +36,34 @@ select * from user where name=’a’ union all select * from user where age=’
 >5，第三方工具：美团技术团队的 SQLAdvisor，给出索引优化建议的工具
 
 ## 优化案例
+
+
+
+## 联合索引
+
+```
+SELECT * FROM table WHERE a > 1 and b = 2; 
+```
+如何建立索引?
+如果此题回答为对(a,b)建立索引，那都可以回去等通知了。
+此题正确答法是，对(b,a)建立索引。如果你建立的是(a,b)索引，那么只有a字段能用得上索引，毕竟 **最左匹配原则遇到范围查询就停止匹配**。
+如果对(b,a)建立索引那么两个字段都能用上，优化器会帮我们调整where后a,b的顺序，让我们用上索引
+
+>如果我们创建了(area, age,salary)的复合索引，那么其实相当于创建了(area,age,salary)、(area,age)、(area)三个索引，这被称为最佳左前缀特性
+
+* [联合索引](https://www.cnblogs.com/rjzheng/p/12557314.html)
+
+* [美团mysql-索引-不错](https://tech.meituan.com/2014/06/30/mysql-index.html)
+* [mysql-基本查询原理-不错](https://dbaplus.cn/news-155-1531-1.html)
+
+
+## 锁
+>1，加锁的方式：自动加锁。对于UPDATE、DELETE和INSERT语句，InnoDB会自动给涉及数据集加排他锁；对于普通SELECT语句，InnoDB不会加任何锁；
+>2，显示加锁：
+>1），共享锁：select * from tableName where ... + lock in share more
+>2），排他锁：select * from tableName where ... + for update
+
+
+### 行锁分析
+>1，如何分析行锁定：show status like 'innodb_row_lock%';
+>2，比较重要的是：innodb_row_lock_time_avg 平均等待时，innodb_row_lock_waits等待总次数，innodb_row_lock_time等待总时长
