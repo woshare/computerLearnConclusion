@@ -2,7 +2,7 @@
 ![Alt text](./res/thread-pool-excutor-workflow.png "")
 ![Alt text](./res/thread-pool-excutor-workflow-struct.png "")
 
-
+![Alt text](./res/thread-status.jpg "")
 
 
 ## Runnable接口和Callable接口
@@ -25,7 +25,15 @@
 
 
 ## 线程回收
+
+>超过corePoolSize的空闲线程由线程池回收，线程池Worker启动跑第一个任务之后就一直循环遍历线程池任务队列，超过指定超时时间获取不到任务就remove Worker，最后由垃圾回收器回收
+
+>一般线程，run()方法执行完，线程就会正常结束
+
+>查看runWorker 下getTask 和processWorkExit
 ThreadPoolExecutor回收工作线程，一条线程getTask()返回null，就会被回收。
+
+>核心线程不会回收
 
 分两种场景。
 

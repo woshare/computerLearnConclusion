@@ -67,3 +67,57 @@ SELECT * FROM table WHERE a > 1 and b = 2;
 ### 行锁分析
 >1，如何分析行锁定：show status like 'innodb_row_lock%';
 >2，比较重要的是：innodb_row_lock_time_avg 平均等待时，innodb_row_lock_waits等待总次数，innodb_row_lock_time等待总时长
+
+
+## 5步优化
+
+SQL优化一般步骤
+>1、通过慢查日志等定位那些执行效率较低的SQL语句
+>2、explain 分析SQL的执行计划
+需要重点关注type、rows、filtered、extra。
+
+type由上至下，效率越来越高
+
+ALL 全表扫描
+index 索引全扫描
+range 索引范围扫描，常用语<,<=,>=,between,in等操作
+ref 使用非唯一索引扫描或唯一索引前缀扫描，返回单条记录，常出现在关联查询中
+eq_ref 类似ref，区别在于使用的是唯一索引，使用主键的关联查询
+const/system 单条记录，系统会把匹配行中的其他列作为常数处理，如主键或唯一索引查询
+null MySQL不访问任何表或索引，直接返回结果 虽然上至下，效率越来越高，但是根据cost模型，假设有两个索引idx1(a, b, c),idx2(a, c)，SQL为"select * from t where a = 1 and b in (1, 2) order by c";如果走idx1，那么是type为range，如果走idx2，那么type是ref；当需要扫描的行数，使用idx2大约是idx1的5倍以上时，不会用idx1，否则会用idx2
+Extra
+
+Using filesort：MySQL需要额外的一次传递，以找出如何按排序顺序检索行。通过根据联接类型浏览所有行并为所有匹配WHERE子句的行保存排序关键字和行的指针来完成排序。然后关键字被排序，并按排序顺序检索行。
+Using temporary：使用了临时表保存中间结果，性能特别差，需要重点优化
+Using index：表示相应的 select 操作中使用了覆盖索引（Coveing Index）,避免访问了表的数据行，效率不错！如果同时出现 using where，意味着无法直接通过索引查找来查询到符合条件的数据。
+Using index condition：MySQL5.6之后新增的ICP，using index condtion就是使用了ICP（索引下推），在存储引擎层进行数据过滤，而不是在服务层过滤，利用索引现有的数据减少回表的数据。
+>3、show profile 分析
+了解SQL执行的线程的状态及消耗的时间。默认是关闭的
+```
+set profiling = 1;
+SHOW PROFILES ;
+SHOW PROFILE FOR QUERY  #{id};
+```
+>4、trace
+trace分析优化器如何选择执行计划，通过trace文件能够进一步了解为什么优惠券选择A执行计划而不选择B执行计划。
+```
+set optimizer_trace="enabled=on";
+set optimizer_trace_max_mem_size=1000000;
+select * from information_schema.optimizer_trace;
+
+
+```
+>5、确定问题并采用相应的措施
+>优化索引
+>优化SQL语句：修改SQL、IN 查询分段、时间查询分段、基于上一次数据过滤
+>改用其他实现方式：ES、数仓等
+>数据碎片处理
+
+* [如上优化方法和场景](https://www.cnblogs.com/powercto/p/14410128.html)
+
+### 大分页优化
+>1，一种是把上一次的最后一条数据，也即上面的c传过来，然后做“c < xxx”处理
+>2，**采用延迟关联的方式进行处理，减少SQL回表，但是要记得索引需要完全覆盖才有效果**
+```
+select t1.* from _t t1, (select id from _t where a = 1 and b = 2 order by c desc limit 10000, 10) t2 where t1.id = t2.id;
+```

@@ -87,3 +87,49 @@
 >由于数据分散为多个文件，很难利用IO层面的Group Commit机制，网络传输也会用到类似优化算法
 
 * [ONS(RocketMQ)为什么能够比Kafka支持更多的分区数量？](https://developer.aliyun.com/article/105)
+
+
+
+## kafka ack机制
+>Kafka的ack机制，指的是producer的消息发送确认机制，这直接影响到Kafka集群的吞吐量和消息可靠性。而吞吐量和可靠性就像硬币的两面，两者不可兼得，只能平衡。
+
+>ack有3个可选值，分别是 0，1，-1。默认是1
+
+>ack=0
+>意味着producer不等待broker同步完成的确认，继续发送下一条(批)信息提供了最低的延迟。但是最弱的持久性，当服务器发生故障时，就很可能发生数据丢失。例如leader已经死亡，producer不知情，还会继续发送消息broker接收不到数据就会数据丢失
+>ack=1
+>ack=1，简单来说就是，producer只要收到一个分区副本成功写入的通知就认为推送消息成功了。这里有一个地方需要注意，这个副本必须是leader副本。只有leader副本成功写入了，producer才会认为消息发送成功。
+注意，ack的默认值就是1。这个默认值其实就是吞吐量与可靠性的一个折中方案。生产上我们可以根据实际情况进行调整，比如如果你要追求高吞吐量，那么就要放弃可靠性。
+>ack=-1
+>producer只有收到分区内所有副本的成功写入的通知才认为推送消息成功了。
+
+
+
+![](./res/kafka-producer-ack.png "")
+
+![](./res/kafka-producer-topic-consumer.png "")
+
+## 重复消费
+>offset没来得及提交更新
+>具体消息加唯一的id用以区分，避免重复消费
+
+
+原因1：强行kill线程，导致消费后的数据，offset没有提交（消费系统宕机、重启等）。
+原因2：设置offset为自动提交，关闭kafka时，如果在close之前，调用 consumer.unsubscribe() 则有可能部分offset没提交，下次重启会重复消费。
+
+解决方案：
+spring.kafka.consumer.enable-auto-commit=false
+spring.kafka.consumer.auto-offset-reset=latest
+
+原因3:（重复消费最常见的原因）：消费后的数据，当offset还没有提交时，partition就断开连接。比如，通常会遇到消费的数据，处理很耗时，导致超过了Kafka的session timeout时间（0.10.x版本默认是30秒），那么就会re-blance重平衡，此时有一定几率offset没提交，会导致重平衡后重复消费。
+
+原因4：当消费者重新分配partition的时候，可能出现从头开始消费的情况，导致重发问题。
+
+原因5：当消费者消费的速度很慢的时候，可能在一个session周期内还未完成，导致心跳机制检测报告出问题。
+
+原因6：并发很大，可能在规定的时间（session.time.out默认30s）内没有消费完，就会可能导致reblance重平衡，导致一部分offset自动提交失败，然后重平衡后重复消费
+
+
+* [举例会出现重复消费的bug](https://zhuanlan.zhihu.com/p/112745985)
+
+## 重复生产
