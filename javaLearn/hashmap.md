@@ -10,6 +10,7 @@
         - [重要参数](#%E9%87%8D%E8%A6%81%E5%8F%82%E6%95%B0)
         - [源码简要解析](#%E6%BA%90%E7%A0%81%E7%AE%80%E8%A6%81%E8%A7%A3%E6%9E%90)
     - [hashmap,linkedhashmap,treemap,concurrenthashmap](#hashmaplinkedhashmaptreemapconcurrenthashmap)
+- [ConcurrentHashMap](#concurrenthashmap)
 
 ### hash
 
@@ -128,3 +129,20 @@ static final int MIN_TREEIFY_CAPACITY = 64;
 >1，HashMap取出的时候是随机的,是最常用的一个Map.根据键的HashCode值存储数据,根据键直接获取它的值，具有很快的访问速度。在Map中插入、删除和定位元素，HashMap 是最好的选择。    
 >2，TreeMap取出来的是排序后的键值对。但如果您要按自然顺序或自定义顺序遍历键，那么TreeMap会更好。   
 >3，LinkedHashMap（桶内同一位置元素集为双向链表） 是HashMap的一个子类，如果需要输出的顺序和输入的相同,那么用LinkedHashMap可以实现。    
+
+
+## ConcurrentHashMap
+
+>ConcurrentHashMap在JDK1.8的时候将put()方法中的分段锁Segment移除，转而采用一种CAS锁和synchronized来实现插入方法的线程安全
+>Hash冲突 JDK1.7中，ConcurrentHashMap从过二次hash的方式（Segment -> HashEntry）能够快速的找到查找的元素。在1.8中通过链表加红黑树的形式弥补了put、get时的性能差距
+
+```
+1.8以前的版本，是每个段锁有自己的table存储元素
+static final class Segment<K,V> extends ReentrantLock implements Serializable {
+    transient volatile int count;
+    transient int modCount;
+    transient int threshold;
+    transient volatile HashEntry<K,V>[] table;
+    final float loadFactor;
+}
+```
