@@ -204,7 +204,7 @@ private static final ThreadLocal<Map<Object, Object>> resources =
 ```
 
 
-## 4，结论：
+## 4，结论： 可能还要考虑事务传播类型
 >1，工作线程通过threadLocalMap保存了很多信息，其中包括事务信息，这样service1调用service2，隐性传递事务信息
 >2，service1调用service2，使用的同一个sqlSession，例如：org.apache.ibatis.session.defaults.DefaultSqlSessionFactory@49f41c2e=org.mybatis.spring.SqlSessionHolder@32772777
 >3，NameThreadLocal<sqlSessionFactory,SqlSessionHolder>-->sqlSessionHolder-->sqlSession->Excutor

@@ -81,3 +81,74 @@ shutdown(){
 2.2）任务还没有完全执行完
 
 至少会有一条线程被回收。在processWorkerExit(Worker w, boolean completedAbruptly)方法里会调用tryTerminate()，向任意空闲线程发出中断信号。所有被阻塞的线程，最终都会被一个个唤醒，回收。
+
+
+### 
+>wait方法在进入wait状态的时候会释放对象的锁，但是sleep方法不会。
+>wait方法是针对一个被同步代码块加锁的对象，而sleep是针对一个线程
+>前线程在调用yield方法时会放弃CPU,看线程状态转换图可知，run变成ready
+
+![](./res/thread-status-sleep-wait-yield.webp "")
+
+
+### join 原理
+* [thread join-重要-讲解的不错](https://juejin.cn/post/6844903941247860749)
+
+
+>在main主线程中调用threadA.join()方法，因为join() 方法是一个synchronized方法，所以主线程会首先持有thread线程对象的锁。接下来在join()方法里面调用wait()方法，主线程会释放thread线程对象的锁，进入等待状态。最后，threadA线程执行结束，JVM会调用lock.notify_all(thread);唤醒持有threadA这个对象锁的线程，也就是主线程，所以主线程会继续往下执行
+
+
+```
+    public final void join() throws InterruptedException {
+        join(0);
+    }
+
+    public final synchronized void join(long millis)
+    throws InterruptedException {
+        long base = System.currentTimeMillis();
+        long now = 0;
+
+        if (millis < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+
+        if (millis == 0) {
+            while (isAlive()) {
+                wait(0);//wait()方法是Object类中的方法，也就是说执行wait()方法之后主线 程会释放threadA对象的锁，进入等待状态，直到被再次唤醒。 大家都知道，有了wait()，必然有notify()，什么时候才会notify呢？在jvm源码里,如下
+            }
+        } else {
+            while (isAlive()) {
+                long delay = millis - now;
+                if (delay <= 0) {
+                    break;
+                }
+                wait(delay);
+                now = System.currentTimeMillis() - base;
+            }
+        }
+    }
+
+
+//一个c++函数：
+void JavaThread::exit(bool destroy_vm, ExitType exit_type) ；
+//里面有一个贼不起眼的一行代码
+ensure_join(this);
+
+static void ensure_join(JavaThread* thread) {
+  Handle threadObj(thread, thread->threadObj());
+
+  ObjectLocker lock(threadObj, thread);
+
+  thread->clear_pending_exception();
+
+  java_lang_Thread::set_thread_status(threadObj(), java_lang_Thread::TERMINATED);
+
+  java_lang_Thread::set_thread(threadObj(), NULL);
+
+  //hreadA线程对象被notifyall了，那么主线程也就能继续跑下去了
+  lock.notify_all(thread);
+
+  thread->clear_pending_exception();
+}
+
+```
