@@ -204,6 +204,40 @@ public void delBigZset(String host, int port, String password, String bigZsetKey
 
 ![](./res/redis-sentinel.png "")
 
+### 选举
+>1，sentinel之间选举出头领sentinel
+>2，由刚下线的master下的slave，挑选一个slave为master
+
+#### sentinel选举成头领sentinel：拉票机制
+>1，所有监控客观下线Master的Sentinel都有可能成为领头Sentinel。
+>2，每次进行领头Sentinel选举之后，不论是否选举成功，所有Sentinel的配置纪元（configuration epoch）的值都会自动增加一次。
+>3，在一个配置纪元里面，所有Sentinel都有一次将某个Sentinel设置为局部领头Sentinel的机会，并且局部领头Sentinel一旦设置，在这个配置纪元里面将不能再更改。
+>4，监视Master客观下线的所有在线Sentinel都有要求其它Sentinel将自己设置为局部领头Sentinel的机会。
+>5，当一个Sentinel（源Sentinel）向另一个Sentinel（目标Sentinel）发送SENTINEL is-master-down-by-addr命令，并且命令中的runid参数不是“.”符号而是当前Sentinel的运行ID时，这表示当前Sentinel要求目标Sentinel将自己设置为领头Sentinel。
+>6，**Sentinel设置局部领头Sentinel的规则是先到先得。即最先向目标Sentinel发送设置要求的Sentinel将会成为局部领头Sentinel，之后接受到的请求都会被拒绝。**
+>7，目标Sentinel接收到SENTINEL is-master-down-by-addr命令后，将向源Sentinel返回一条命令回复，回复中的leader_runid参数和leader_epoch参数分别记录了目标Sentinel的局部领头Sentinel的运行ID和配置纪元。
+>8，源Sentinel在接收到目标Sentinel返回的命令回复之后，会检查回复中leader_epoch参数的值和自己的配置纪元是否相同，如果相同的话，那么源Sentinel继续取出回复中的leader_runid参数，如果leader_runid参数的值和源Sentinel的运行ID一直，那么表示目标Sentinel将源Sentinel设置成了局部领头Sentinel。
+>9，如果有某个Sentinel被半数以上的Sentinel设置成了局部领头Sentinel，那么这个Sentinel称为领头Sentinel。
+>10，领头Sentinel的产生需要半数以上的Sentinel支持，并且每个Sentinel在每个配置纪元里面只能设置一次局部Sentinel，所以在一个配置纪元里面，只会出现一个领头Sentinel。
+>11，如果在给定时限内，没有一个Sentinel被选举为领头Sentinel，那么各个Sentinel将在一段时间之后再次进行选举，知道选出领头Sentinel为止。
+
+#### 故障转移
+
+>1，在已下线的Master主机下面挑选一个Slave将其转换为主服务器。
+>2，让其余所有Slave服务器复制新的Master服务器。
+>3，让已下线的Master服务器变成新的Master服务器的Slave。当已下线的服务器在此上线后将复新的Master的数据。
+
+#### slave选举成master
+>领头Sentinel会在所有Slave中选出新的Master，发送SLAVEOF no one命令，将这个服务器确定为主服务器。
+>领头Sentinel会将已下线Master的所有从服务器报错在一个列表中，按照规则进行挑选。
+
+>1，删除列表中所有处于下线或者短线状态的Slave。
+>2，删除列表中所有最近5s内没有回复过领头Sentinel的INFO命令的Slave。
+>3，删除所有与下线Master连接断开超过down-after-milliseconds * 10毫秒的Slave。
+>4，领头Sentinel将根据Slave优先级，对列表中剩余的Slave进行排序，并选出其中优先级最高的Slave。如果有多个具有相同优先级的Slave，那么领头Sentinel将按照Slave复制偏移量，选出其中偏移量最大的Slave。如果有多个优先级最高，偏移量最大的Slave，那么根据运行ID最小原则选出新的Master。
+
+>确定新的Master之后，领头Sentinel会以每秒一次的频率向新的Master发送SLAVEOF no one命令，当得到确切的回复role由slave变为master之后，当前服务器顺利升级为Master服务器。
+
 ### cluster模式
 
 >Cluster模式实现了Redis的分布式存储，即每台节点存储不同的内容，来解决在线扩容的问题
