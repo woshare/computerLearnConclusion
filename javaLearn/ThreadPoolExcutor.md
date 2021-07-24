@@ -152,3 +152,6 @@ static void ensure_join(JavaThread* thread) {
 }
 
 ```
+
+
+* [java 体系知识](https://www.pdai.tech/md/java/thread/java-thread-x-juc-executor-FutureTask.html)

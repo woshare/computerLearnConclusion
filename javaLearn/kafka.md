@@ -133,3 +133,13 @@ spring.kafka.consumer.auto-offset-reset=latest
 * [举例会出现重复消费的bug](https://zhuanlan.zhihu.com/p/112745985)
 
 ## 重复生产
+
+
+>kafka 遵循了一种大部分消息系统共同的传统的设计：producer 将消息推送到 broker，consumer 从broker 拉取消息
+
+### Zookeeper 对于 Kafka 的作用是什么？
+>1，Zookeeper 是一个开放源码的、高性能的协调服务，它用于 Kafka 的分布式应用。
+
+>2，Zookeeper 主要用于在集群中不同节点之间进行通信
+
+>3，在 Kafka 中，它被用于提交偏移量，因此如果节点在任何情况下都失败了，它都可以从之前提交的偏移量中获取除此之外，它还执行其他活动，如: leader 检测、分布式同步、配置管理、识别新节点何时离开或连接、集群、节点实时状态等等。
