@@ -1,5 +1,11 @@
 # 线程模型与java线程源码分析
 
+## 主要内容目录
+>1，操作系统的线程模型和java的线程模型
+>2，线程的状态转换
+>3，java thread start线程启动的JDK源码【重要】
+>4，java thread join和exit源码
+
 ## 线程模型
 
 ### Java线程
