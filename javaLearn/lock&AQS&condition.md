@@ -214,7 +214,11 @@ final boolean acquireQueued(final Node node, int arg) {
 ## ReentrantReadWriteLock：悲观的可重入读写锁
 
 ## StampedLock:乐观读写锁
-
+ // 第8位写锁标识，低7位为读锁
+    // 初始 state=ORIGIN =0000 0000 0000 0000 0000 0001 0000 0000 ，是为了避免failed的state=0
+    // tryOptimisticRead() 获得乐观读锁之后 stamp=state=0000 0000 0000 0000 0000 0001 0000 0000
+    // 如果有写锁，说明对数据有修改，获取写锁，是在第8位置位1。则 此时 state=0000 0000 0000 0000 0000 0001 1000 0000
+    //在做validate stamp  0000 0000 0000 0000 0000 0001 0000 0000 & SBITS=1111 1111 1111 1111 1111 1111 1000 0000 ！= state & SBITS
 ```
 public class Point {
     private final StampedLock stampedLock = new StampedLock();
