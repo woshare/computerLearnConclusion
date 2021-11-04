@@ -53,7 +53,9 @@ void ObjectSynchronizer::wait(Handle obj, jlong millis, TRAPS) {
 >首先撤销偏向锁，然后膨胀为重量级锁，再调用ObjectMonitor的wait函数。忽略ObjectMonitor复杂的实现机制，我们只看关键的地方，如下所示
 >1. 添加到ObjectMonitor的等待队列_WaitSet中
 >2. 释放java的monitor锁（也就是monitorexit）
->3. 等待，和Thread::sleep一样的  ，最后也都是pthread_cond_wait or pthread_cond_timewait,所以和sleep的差别就是会释放锁
+>3. 调用_ParkEvent->park ()等待，和Thread::sleep一样的  ，最后也都是pthread_cond_wait or pthread_cond_timewait,所以和sleep的差别就是会释放锁
+
+> hotspot/src.share/vm/runtime/objectMonitor.cpp
 ```
 void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
   Thread * const Self = THREAD ;
@@ -74,7 +76,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
            // Intentionally empty
        } else if (node._notified == 0) {
          if (millis <= 0) {
-            Self->_ParkEvent->park () ; 
+            Self->_ParkEvent->park () ; //ObjectMonitor::notify中会调用unpark
          } else {
             ret = Self->_ParkEvent->park (millis) ; // 3. 等待，和Thread::sleep一样的  ，最后也都是pthread_cond_wait or pthread_cond_timewait
          }
@@ -100,4 +102,124 @@ void ObjectSynchronizer::notify(Handle obj, TRAPS) {
   ObjectSynchronizer::inflate(THREAD, obj())->notify(THREAD);
 }
 
+```
+> hotspot/src.share/vm/runtime/objectMonitor.cpp
+```
+void ObjectMonitor::notify(TRAPS) {
+  CHECK_OWNER();
+  if (_WaitSet == NULL) {
+     TEVENT (Empty-Notify) ;
+     return ;
+  }
+  DTRACE_MONITOR_PROBE(notify, this, object(), THREAD);
+
+  int Policy = Knob_MoveNotifyee ;
+
+  Thread::SpinAcquire (&_WaitSetLock, "WaitSet - notify") ;
+  ObjectWaiter * iterator = DequeueWaiter() ;
+  if (iterator != NULL) {
+     TEVENT (Notify1 - Transfer) ;
+     guarantee (iterator->TState == ObjectWaiter::TS_WAIT, "invariant") ;
+     guarantee (iterator->_notified == 0, "invariant") ;
+     if (Policy != 4) {
+        iterator->TState = ObjectWaiter::TS_ENTER ;
+     }
+     iterator->_notified = 1 ;
+     Thread * Self = THREAD;
+     iterator->_notifier_tid = Self->osthread()->thread_id();
+
+     ObjectWaiter * List = _EntryList ;
+     if (List != NULL) {
+        assert (List->_prev == NULL, "invariant") ;
+        assert (List->TState == ObjectWaiter::TS_ENTER, "invariant") ;
+        assert (List != iterator, "invariant") ;
+     }
+
+     if (Policy == 0) {       // prepend to EntryList
+         if (List == NULL) {
+             iterator->_next = iterator->_prev = NULL ;
+             _EntryList = iterator ;
+         } else {
+             List->_prev = iterator ;
+             iterator->_next = List ;
+             iterator->_prev = NULL ;
+             _EntryList = iterator ;
+        }
+     } else
+     if (Policy == 1) {      // append to EntryList
+         if (List == NULL) {
+             iterator->_next = iterator->_prev = NULL ;
+             _EntryList = iterator ;
+         } else {
+            // CONSIDER:  finding the tail currently requires a linear-time walk of
+            // the EntryList.  We can make tail access constant-time by converting to
+            // a CDLL instead of using our current DLL.
+            ObjectWaiter * Tail ;
+            for (Tail = List ; Tail->_next != NULL ; Tail = Tail->_next) ;
+            assert (Tail != NULL && Tail->_next == NULL, "invariant") ;
+            Tail->_next = iterator ;
+            iterator->_prev = Tail ;
+            iterator->_next = NULL ;
+        }
+     } else
+     if (Policy == 2) {      // prepend to cxq
+         // prepend to cxq
+         if (List == NULL) {
+             iterator->_next = iterator->_prev = NULL ;
+             _EntryList = iterator ;
+         } else {
+            iterator->TState = ObjectWaiter::TS_CXQ ;
+            for (;;) {
+                ObjectWaiter * Front = _cxq ;
+                iterator->_next = Front ;
+                if (Atomic::cmpxchg_ptr (iterator, &_cxq, Front) == Front) {
+                    break ;
+                }
+            }
+         }
+     } else
+     if (Policy == 3) {      // append to cxq
+        iterator->TState = ObjectWaiter::TS_CXQ ;
+        for (;;) {
+            ObjectWaiter * Tail ;
+            Tail = _cxq ;
+            if (Tail == NULL) {
+                iterator->_next = NULL ;
+                if (Atomic::cmpxchg_ptr (iterator, &_cxq, NULL) == NULL) {
+                   break ;
+                }
+            } else {
+                while (Tail->_next != NULL) Tail = Tail->_next ;
+                Tail->_next = iterator ;
+                iterator->_prev = Tail ;
+                iterator->_next = NULL ;
+                break ;
+            }
+        }
+     } else {
+        ParkEvent * ev = iterator->_event ;
+        iterator->TState = ObjectWaiter::TS_RUN ;
+        OrderAccess::fence() ;
+        ev->unpark() ;
+     }
+
+     if (Policy < 4) {
+       iterator->wait_reenter_begin(this);
+     }
+
+     // _WaitSetLock protects the wait queue, not the EntryList.  We could
+     // move the add-to-EntryList operation, above, outside the critical section
+     // protected by _WaitSetLock.  In practice that's not useful.  With the
+     // exception of  wait() timeouts and interrupts the monitor owner
+     // is the only thread that grabs _WaitSetLock.  There's almost no contention
+     // on _WaitSetLock so it's not profitable to reduce the length of the
+     // critical section.
+  }
+
+  Thread::SpinRelease (&_WaitSetLock) ;
+
+  if (iterator != NULL && ObjectMonitor::_sync_Notifications != NULL) {
+     ObjectMonitor::_sync_Notifications->inc() ;
+  }
+}
 ```
