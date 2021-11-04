@@ -15,6 +15,17 @@ status = pthread_cond_wait (&_cond[_cur_index], _mutex) ;//1,将mut互斥量解�
 status = pthread_mutex_unlock(_mutex);
 _counter = 0 ;
 ```
+ 
+## pthread_cond_wait (&_cond[_cur_index], _mutex) 等同如下
+
+```
+  pthread_mutex_unlock(mtx);
+    pthread_cond_just_wait(cv);  //需要第一句unlock和第二句just_wait是原子的
+    pthread_mutex_lock(mtx);
+```
+
+* [pthread_cond_wait原理](https://www.zhihu.com/question/24116967)
+
 
 ## unpark
 ```
@@ -91,7 +102,7 @@ class PlatformParker : public CHeapObj<mtInternal> {
 
 ## LockSupport.park->Unsafe.park
 
->1,JUC/locks LockSupport.park->sun.misc.Unsafe.park->
+>1,JUC/locks LockSupport.park->sun.misc.Unsafe.park->hotspot/src/os/linux/vm/os_linux.cpp Parker::park
 
 ```
 //LockSupport
