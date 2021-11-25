@@ -54,6 +54,7 @@ void ObjectSynchronizer::wait(Handle obj, jlong millis, TRAPS) {
 >1. 添加到ObjectMonitor的等待队列_WaitSet中
 >2. 释放java的monitor锁（也就是monitorexit）
 >3. 调用_ParkEvent->park ()等待，和Thread::sleep一样的  ，最后也都是pthread_cond_wait or pthread_cond_timewait,所以和sleep的差别就是会释放锁
+>4.当ObjectMonitor::notify中会调用unpark唤醒之后，会继续获取monitor的锁
 
 > hotspot/src.share/vm/runtime/objectMonitor.cpp
 ```
@@ -76,12 +77,18 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
            // Intentionally empty
        } else if (node._notified == 0) {
          if (millis <= 0) {
-            Self->_ParkEvent->park () ; //ObjectMonitor::notify中会调用unpark
+            Self->_ParkEvent->park () ; //ObjectMonitor::notify中会调用unpark唤醒
          } else {
             ret = Self->_ParkEvent->park (millis) ; // 3. 等待，和Thread::sleep一样的  ，最后也都是pthread_cond_wait or pthread_cond_timewait
          }
        }
   //...
+ // post monitor waited event. Note that this is past-tense, we are done waiting.
+ //4，ObjectMonitor::notify中会调用unpark唤醒 之后，还要继续问monitor获取锁
+  if (event.should_commit()) {
+       post_monitor_wait_event(&event, node._notifier_tid, millis, ret == OS_TIMEOUT);
+     }
+//...
 }
 
 ```
