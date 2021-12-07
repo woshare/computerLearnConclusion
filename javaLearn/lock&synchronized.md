@@ -63,3 +63,89 @@ synchronized(对象) {
 ![synchronized-wait-notify-example](./res/example-synchronize-wait-notify.png "synchronized-wait-notify-example")
 ![synchronized-wait-notify-example结果分析](./res/synchronize-example-result-analysis.png "synchronized-wait-notify-example结果分析")
 ![synchronized-wait-notify-example-线程状态过程](./res/synchronize-example-thread-status.png "")
+
+
+### 源码
+
+>InterpreterRuntime:: monitorenter方法
+```
+IRT_ENTRY_NO_ASYNC(void, InterpreterRuntime::monitorenter(JavaThread* thread, BasicObjectLock* elem))
+#ifdef ASSERT
+  thread->last_frame().interpreter_frame_verify_monitor(elem);
+#endif
+  if (PrintBiasedLockingStatistics) {
+    Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
+  }
+  Handle h_obj(thread, elem->obj());
+  assert(Universe::heap()->is_in_reserved_or_null(h_obj()),
+         "must be NULL or an object");
+  if (UseBiasedLocking) {
+    // Retry fast entry if bias is revoked to avoid unnecessary inflation
+    ObjectSynchronizer::fast_enter(h_obj, elem->lock(), true, CHECK);
+  } else {
+    ObjectSynchronizer::slow_enter(h_obj, elem->lock(), CHECK);
+  }
+  assert(Universe::heap()->is_in_reserved_or_null(elem->obj()),
+         "must be NULL or an object");
+#ifdef ASSERT
+  thread->last_frame().interpreter_frame_verify_monitor(elem);
+#endif
+IRT_END
+
+void ObjectSynchronizer::fast_enter(Handle obj, BasicLock* lock, bool attempt_rebias, TRAPS) {
+ if (UseBiasedLocking) {
+    if (!SafepointSynchronize::is_at_safepoint()) {
+      BiasedLocking::Condition cond = BiasedLocking::revoke_and_rebias(obj, attempt_rebias, THREAD);
+      if (cond == BiasedLocking::BIAS_REVOKED_AND_REBIASED) {
+        return;
+      }
+    } else {
+      assert(!attempt_rebias, "can not rebias toward VM thread");
+      BiasedLocking::revoke_at_safepoint(obj);
+    }
+    assert(!obj->mark()->has_bias_pattern(), "biases should be revoked by now");
+ }
+
+ slow_enter (obj, lock, THREAD) ;
+}
+
+void ObjectSynchronizer::slow_enter(Handle obj, BasicLock* lock, TRAPS) {
+  markOop mark = obj->mark();
+  assert(!mark->has_bias_pattern(), "should not see bias pattern here");
+
+  if (mark->is_neutral()) {
+    // Anticipate successful CAS -- the ST of the displaced mark must
+    // be visible <= the ST performed by the CAS.
+    lock->set_displaced_header(mark);
+    if (mark == (markOop) Atomic::cmpxchg_ptr(lock, obj()->mark_addr(), mark)) {
+      TEVENT (slow_enter: release stacklock) ;
+      return ;
+    }
+    // Fall through to inflate() ...
+  } else
+  if (mark->has_locker() && THREAD->is_lock_owned((address)mark->locker())) {
+    assert(lock != mark->locker(), "must not re-lock the same lock");
+    assert(lock != (BasicLock*)obj->mark(), "don't relock with same BasicLock");
+    lock->set_displaced_header(NULL);
+    return;
+  }
+
+#if 0
+  // The following optimization isn't particularly useful.
+  if (mark->has_monitor() && mark->monitor()->is_entered(THREAD)) {
+    lock->set_displaced_header (NULL) ;
+    return ;
+  }
+#endif
+
+  // The object header will never be displaced to this lock,
+  // so it does not matter what the value is, except that it
+  // must be non-zero to avoid looking like a re-entrant lock,
+  // and must not look locked either.
+  lock->set_displaced_header(markOopDesc::unused_mark());
+  ObjectSynchronizer::inflate(THREAD, obj())->enter(THREAD);//nflate方法：膨胀为重量级锁
+}
+
+```
+
+>无锁 - 偏向锁 - 轻量级锁 （自旋锁，自适应自旋）- 重量级锁

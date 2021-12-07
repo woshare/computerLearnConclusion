@@ -1,5 +1,12 @@
 # security shiro获取的是前一个用户的数据
 
+## 目录
+>1，现象    
+>2，问题猜测    
+>3，问题定位和debug    
+>4，结论    
+>5，解决方案    
+
 ## 一，现象
 >1，用户1登录，做了一些其他业务请求，退出      
 >2，用户2登录，发现返回的是用户1的数据    
@@ -17,19 +24,23 @@
 >4，结论，排除这个可能          
 
 ### 客户端有使用cookie和服务器端有session问题
->1，本地debug要求，idea开启debug模式，能支持两次以上的请求，以方便模拟用户1登录请求和用户2登录请求，关键设置是：设置debug配置，允许Leave enabled，并且用F9调试        
+>1，**本地debug要求，idea开启debug模式，能支持两次以上的请求，以方便模拟用户1登录请求和用户2登录请求，关键设置是：设置debug配置，允许Leave enabled，并且用F9调试**        
 >2，因为怀疑客户端有cookie，则打印所有http header中的参数，发现确实有cookie，如下         
 ```
 Set-Cookie: JSESSIONID=76CD05659A8AFC4A5E025D9213FFADEC; Path=/; HttpOnly
 Set-Cookie: rememberMe=deleteMe; Path=/; Max-Age=0; Expires=Tue, 23-Nov-2021 06:58:19 GMT; SameSite=lax
 ```
 >3，在本地测试，获取到了用户1登录返回的cookie数据，并在用户2登录请求上带上cookie数据，用F9一步步调试，看idea形成的调试栈空间，并一步步定位何时处理cookie并转为服务器session的。   
->4，一句话总结就是：**有一个全局的session CurrentHashmap存储了session，通过JSESSIONID（就是sessionId）获取session，通过session的attribute，获取subject 的principal的数据，该数据就存储的是用户信息**。    
+>4，一句话总结就是：**因为shiro配置问题，用户1登录请求之后返回了cookie数据，用户2登录时带上了用户1的cookie。服务器有一个全局的session CurrentHashmap存储了session，通过JSESSIONID（就是sessionId）获取session，通过session的attribute，获取subject 的principal的数据，该数据就存储的是用户信息**。    
 >5，补充一点的是，shiro还支持 **记住我（rememberMe）**，如上cookie所示，基于cookie来实现的，不过当前我们是没有用到这个功能，故而，**Set-Cookie: rememberMe=deleteMe**    
 
 #### 定位如下，关键代码
 
 #### DefaultSecurityManager.java
+>重点：context = resolveSession(context)     
+>重点：context = resolvePrincipals(context);   
+>重点：Subject subject = doCreateSubject(context);   
+
 ```
 public Subject createSubject(SubjectContext subjectContext) {
         //create a copy so we don't modify the argument's backing map:
@@ -59,6 +70,8 @@ public Subject createSubject(SubjectContext subjectContext) {
     }
 ```
 #### Request.java
+>重点：session = manager.findSession(requestedSessionId);   
+
 ```
  protected Session doGetSession(boolean create) {
 
@@ -194,7 +207,11 @@ public Subject createSubject(SubjectContext subjectContext) {
         return principals;
     }
 ```
-##### CookieRememberMeManager	：
+##### CookieRememberMeManager	 
+>重点：String base64 = getCookie().readValue(request, response);      
+>重点：if (Cookie.DELETED_COOKIE_VALUE.equals(base64)) return null;    
+>DELETED_COOKIE_VALUE=deleteMe     
+
 ```
 protected byte[] getRememberedSerializedIdentity(SubjectContext subjectContext) {
 
@@ -249,8 +266,11 @@ protected byte[] getRememberedSerializedIdentity(SubjectContext subjectContext) 
         }
     }
 ```
+## 四，结论
+>1，一句话总结就是：**因为shiro配置问题，用户1登录请求之后返回了cookie数据，用户2登录时带上了用户1的cookie。服务器有一个全局的session CurrentHashmap存储了session，通过JSESSIONID（就是sessionId）获取session，通过session的attribute，获取subject 的principal的数据，该数据就存储的是用户信息**。   
 
-## 四，解决方案
+
+## 五，解决方案
 >1，主要配置不创建session： context.setSessionCreationEnabled(false)等。如下：
 
 ```
@@ -261,7 +281,7 @@ protected byte[] getRememberedSerializedIdentity(SubjectContext subjectContext) 
 
         DefaultSubjectDAO subjectDAO = new DefaultSubjectDAO();
         DefaultSessionStorageEvaluator defaultSessionStorageEvaluator = new DefaultSessionStorageEvaluator();
-        
+
         //设置不存储session
         defaultSessionStorageEvaluator.setSessionStorageEnabled(false);
 
