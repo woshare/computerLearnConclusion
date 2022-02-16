@@ -340,3 +340,48 @@ $ redis-cli -h aliyun_redis_instance_ip -p 6379 -a password --pipe < appendonly.
 >redis-shark
 
 ![](./res/redis-shark.png "")
+
+
+## 运维命令
+
+
+```
+
+redis-cli -a redis134ok --bigkeys
+
+redis-cli -a redis134ok --stat
+
+redis-cli -a redis134ok --scan --pattern '*my*'  用scan来查找key、并过滤
+
+redis-benchmark-h localhost -p 6379 -c 100 -n 100000　　#100个并发连接，100000个请求，检测host为localhost 端口为6379的redis服务器性能
+
+info
+
+slowlog get
+```
+
+
+## 热点数据缓存击穿的一般处理方式
+
+public String get(key) {
+    String value = redis.get(key);
+    if (value == null) { //代表缓存值过期
+        //设置3min的超时，防止del操作失败的时候，下次缓存过期一直不能load db
+        if (redis.setnx(key_mutex, 1, 3 * 60) == 1) {  //代表设置成功
+            value = db.get(key);
+                    redis.set(key, value, expire_secs);
+                    redis.del(key_mutex);
+            } else {  //这个时候代表同时候的其他线程已经load db并回设到缓存了，这时候重试获取缓存值即可
+                    sleep(50);
+                    get(key);  //重试
+            }
+        } else {
+            return value;      
+        }
+}
+
+
+
+## Redis 和数据库双写一致性问题
+>1，一致性问题还可以再分为最终一致性和强一致性。数据库和缓存双写，就必然会存在不一致的问题。前提是如果对数据有强一致性要求，不能放缓存。我们所做的一切，只能保证最终一致性。
+>2，另外，我们所做的方案从根本上来说，只能降低不一致发生的概率。因此，有强一致性要求的数据，不能放缓存。首先，采取正确更新策略，先更新数据库，再删缓存。其次，因为可能存在删除缓存失败的问题，提供一个补偿措施即可，例如利用消息队列

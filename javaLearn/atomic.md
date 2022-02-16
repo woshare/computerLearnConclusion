@@ -35,6 +35,29 @@
     }
 ```
 
+``` /hotspot/src/share/vm/prims/unsafe.cpp
+UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSwapInt(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jint e, jint x))
+  UnsafeWrapper("Unsafe_CompareAndSwapInt");
+  oop p = JNIHandles::resolve(obj);
+  jint* addr = (jint *) index_oop_from_field_offset_long(p, offset);
+  return (jint)(Atomic::cmpxchg(x, addr, e)) == e;
+UNSAFE_END
+
+
+UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSwapObject(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jobject e_h, jobject x_h))
+  UnsafeWrapper("Unsafe_CompareAndSwapObject");
+  oop x = JNIHandles::resolve(x_h);// 当前值
+  oop e = JNIHandles::resolve(e_h);// 预期值  
+  oop p = JNIHandles::resolve(obj);
+  HeapWord* addr = (HeapWord *)index_oop_from_field_offset_long(p, offset);// 在内存中的具体位置
+  oop res = oopDesc::atomic_compare_exchange_oop(x, addr, e, true);
+  jboolean success  = (res == e);// 如果返回的res等于e，则判定满足compare条件（说明res应该为内存中的当前值），但实际上会有ABA的问题
+  if (success)// success为true时，说明此时已经交换成功（调用的是最底层的cmpxchg指令）
+    update_barrier_set((void*)addr, x);// 每次Reference类型数据写操作时，都会产生一个Write Barrier暂时中断操作，配合垃圾收集器
+  return success;
+UNSAFE_END
+```
+
 ## Unsafe
 >通常，我们在Java中创建的对象都处于堆内内存（heap）中，堆内内存是由JVM所管控的Java进程内存，并且它们遵循JVM的内存管理机制，JVM会采用垃圾回收机制统一管理堆内存。与之相对的是堆外内存，存在于JVM管控之外的内存区域，Java中对堆外内存的操作，依赖于Unsafe提供的操作堆外内存的native方法。
 
