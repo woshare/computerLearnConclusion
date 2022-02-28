@@ -125,6 +125,16 @@ JavaThread::JavaThread(ThreadFunction entry_point, size_t stack_sz) :
 >hotspot/src/linux/vm/os_linux.cpp:os :: create_thread，实际就是调用平台创建线程的方法pthread_create来创建线程。
 
 ```
+  enum ThreadType {
+    vm_thread,
+    cgc_thread,        // Concurrent GC thread
+    pgc_thread,        // Parallel GC thread
+    java_thread,
+    compiler_thread,
+    watcher_thread,
+    os_thread
+  };
+  
 bool os::create_thread(Thread* thread, ThreadType thr_type, size_t stack_size) {
   assert(thread->osthread() == NULL, "caller responsible");
 

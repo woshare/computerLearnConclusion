@@ -256,6 +256,9 @@ public void delBigZset(String host, int port, String password, String bigZsetKey
 
 ![](./res/redis-cluster.png "")
 
+## redis数据结构图
+
+* [redis结构图-不错](https://mp.weixin.qq.com/s/gQnuynv6XPD_aeIBQBeI2Q)
 
 ## 跳表skiplist
 >跳跃表在 Redis 的唯一作用， 就是实现有序集数据类型
@@ -362,7 +365,7 @@ slowlog get
 
 
 ## 热点数据缓存击穿的一般处理方式
-
+```
 public String get(key) {
     String value = redis.get(key);
     if (value == null) { //代表缓存值过期
@@ -379,9 +382,31 @@ public String get(key) {
             return value;      
         }
 }
-
+```
 
 
 ## Redis 和数据库双写一致性问题
 >1，一致性问题还可以再分为最终一致性和强一致性。数据库和缓存双写，就必然会存在不一致的问题。前提是如果对数据有强一致性要求，不能放缓存。我们所做的一切，只能保证最终一致性。
 >2，另外，我们所做的方案从根本上来说，只能降低不一致发生的概率。因此，有强一致性要求的数据，不能放缓存。首先，采取正确更新策略，先更新数据库，再删缓存。其次，因为可能存在删除缓存失败的问题，提供一个补偿措施即可，例如利用消息队列
+
+## 禁止危险命令   
+>1，修改客户端源代码，禁止掉一些危险的命令(shutdown, flushall, monitor, keys *)，当然还是可以通过redis-cli来完成
+>2，添加command-rename配置，将一些危险的命令(flushall, monitor, keys * , flushdb)做rename，如果有需要的话，找到redis的运维人员处理
+```
+rename-command FLUSHALL "随机数"  
+rename-command FLUSHDB "随机数"  
+rename-command KEYS "随机数"
+```
+
+
+## 子进程内存消耗
+>子进程内存消耗主要指执行 AOF 重写 或者进行 RDB 保存时 Redis 创建的子进程内存消耗。Redis 执行 fork 操作产生的子进程内存占用量表现为与父进程相同，理论上需要一倍的物理内存来完成相应的操作。但是 Linux 具有 **写时复制技术 (copy-on-write)，父子进程会共享相同的物理内存页，当父进程处理写请求时会对需要修改的页复制出一份副本完成写操作，而子进程依然读取 fork 时整个父进程的内存快照**。
+
+
+![linux-fork-copy-on-write](../res/linux-fork-copy-on-write.awebp "")
+
+>如上图所示，fork 时只拷贝 page table，也就是页表。只有等到某一页发生修改时，才真正进行页的复制。
+但是 Linux Kernel 在 2.6.38 内存增加了 Transparent Huge Pages (THP) 机制，简单理解，它就是让页大小变大，本来一页为 4KB，开启 THP 机制后，一页大小为 2MB。它虽然可以加快 fork 速度( 要拷贝的页的数量减少 )，但是会导致 copy-on-write 复制内存页的单位从 4KB 增大为 2MB，如果父进程有大量写命令，会加重内存拷贝量，都是修改一个页的内容，但是页单位变大了，从而造成过度内存消耗
+
+
+* [redis](https://juejin.cn/post/6844903967298682893)
