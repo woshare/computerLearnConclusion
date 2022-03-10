@@ -20,3 +20,7 @@ C<---                finish（使用了对称秘钥）                  ---S  //
 >2,我们以 Github 网站使用的 TLS 为例，使用浏览器可以看到它使用的加密为 TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256。其中密钥交互算法是 ECDHE_RSA，对称加密算法是 AES_128_GCM，消息认证（MAC）算法为 SHA256。
 
 * [https及相关简介](https://hit-alibaba.github.io/interview/basic/network/HTTPS.html)
+
+![](./res/https-request-handshake.png "")
+
+![](./res/http-https.png "")

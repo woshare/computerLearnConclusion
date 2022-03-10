@@ -3,6 +3,8 @@
 * [redis 阿里建议使用规范](https://www.infoq.cn/article/K7dB5AFKI9mr5Ugbs_px)
 * [redis数据结构描述-不错](https://i6448038.github.io/2019/12/01/redis-data-struct/)
 
+* [十二张图描述redis数据结构](https://mp.weixin.qq.com/s/gQnuynv6XPD_aeIBQBeI2Q)
+
 ## Redis的内存淘汰策略：六种
 
 >Redis的内存淘汰策略是指在Redis的用于缓存的内存不足时，怎么处理需要新写入且需要申请额外空间的数据。
