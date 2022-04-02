@@ -89,7 +89,40 @@
 
 * [ONS(RocketMQ)为什么能够比Kafka支持更多的分区数量？](https://developer.aliyun.com/article/105)
 
+>每个分区存储了完整的消息数据，虽然每个分区写入是磁盘顺序写，但是多个分区同时顺序写入在操作系统层面变为了随机写入。
+>由于数据分散为多个文件，很难利用IO层面的Group Commit机制，网络传输也会用到类似优化算法
 
+## 选举
+控制器选举可以认为是Broker的选举。
+
+集群中第一个启动的Broker会通过在Zookeeper中创建临时节点/controller来让自己成为控制器，其他Broker启动时也会在zookeeper中创建临时节点，但是发现节点已经存在，所以它们会收到一个异常，意识到控制器已经存在，那么就会在Zookeeper中创建watch对象，便于它们收到控制器变更的通知。
+
+那么如果控制器由于网络原因与Zookeeper断开连接或者异常退出，那么其他broker通过watch收到控制器变更的通知，就会去尝试创建临时节点/controller，如果有一个Broker创建成功，那么其他broker就会收到创建异常通知，也就意味着集群中已经有了控制器，其他Broker只需创建watch对象即可。
+
+如果集群中有一个Broker发生异常退出了，那么控制器就会检查这个broker是否有分区的副本leader，如果有那么这个分区就需要一个新的leader，此时控制器就会去遍历其他副本，决定哪一个成为新的leader，同时更新分区的ISR集合。
+
+如果有一个Broker加入集群中，那么控制器就会通过Broker ID去判断新加入的Broker中是否含有现有分区的副本，如果有，就会从分区副本中去同步数据。
+
+## Kafka创建Topic时如何将分区放置到不同的Broker中
+副本因子不能大于 Broker 的个数；
+第一个分区（编号为0）的第一个副本放置位置是随机从 brokerList 选择的；
+其他分区的第一个副本放置位置相对于第0个分区依次往后移。也就是如果我们有5个 Broker，5个分区，假设第一个分区放在第四个 Broker 上，那么第二个分区将会放在第五个 Broker 上；第三个分区将会放在第一个 Broker 上；第四个分区将会放在第二个 Broker 上，依次类推；
+剩余的副本相对于第一个副本放置位置其实是由 nextReplicaShift 决定的，而这个数也是随机产生的
+
+## Kafka 分区数可以增加或减少吗？为什么？
+我们可以使用 bin/kafka-topics.sh 命令对 Kafka 增加 Kafka 的分区数据，但是 Kafka 不支持减少分区数。
+Kafka 分区数据不支持减少是由很多原因的，比如减少的分区其数据放到哪里去？是删除，还是保留？删除的话，那么这些没消费的消息不就丢了。如果保留这些消息如何放到其他分区里面？追加到其他分区后面的话那么就破坏了 Kafka 单个分区的有序性。如果要保证删除分区数据插入到其他分区保证有序性，那么实现起来逻辑就会非常复杂。
+
+## 谈谈 Kafka 吞吐量为何如此高？
+多分区、batch send、kafka Reator 网络模型、pagecache、sendfile 零拷贝、数据压缩
+
+4>分区分段+索引
+
+Kafka的message是按topic分类存储的，topic中的数据又是按照一个一个的partition即分区存储到不同broker节点。每个partition对应了操作系统上的一个文件夹，partition实际上又是按照segment分段存储的。这也非常符合分布式系统分区分桶的设计思想。
+
+## Kafka消息是采用Pull模式，还是Push模式？
+Kafka最初考虑的问题是，customer应该从brokes拉取消息还是brokers将消息推送到consumer，也就是pull还push。在这方面，Kafka遵循了一种大部分消息系统共同的传统的设计：
+>push模式下，当broker推送的速率远大于consumer消费的速率时，consumer恐怕就要崩溃了。最终Kafka还是选取了传统的pull模式。
 
 ## kafka ack机制
 >Kafka的ack机制，指的是producer的消息发送确认机制，这直接影响到Kafka集群的吞吐量和消息可靠性。而吞吐量和可靠性就像硬币的两面，两者不可兼得，只能平衡。

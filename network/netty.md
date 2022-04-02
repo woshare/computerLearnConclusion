@@ -1,5 +1,6 @@
 # netty
 
+* [netty讲解的很不错](https://cloud.tencent.com/developer/article/1754078)
 
 ![](./res/netty-channl-pipeline.png "")
 
