@@ -37,7 +37,7 @@
 ```
 POST https://tantan-jskxzx-openai.openai.azure.com/openai/deployments/deployment-d135e9dee91a4029b3cb0b8530baaac2/chat/completions?api-version=2023-03-15-preview
 Content-Type: application/json
-api-key: b17e1b31e13a4c63a6fa2ebb52db6c1d
+api-key: xxxxxxxx
 
 
 {"messages":[
@@ -51,7 +51,7 @@ api-key: b17e1b31e13a4c63a6fa2ebb52db6c1d
 
 ```
 POST https://api.openai.com/v1/completions
-Authorization: Bearer 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
+Authorization: Bearer yyyyyyyyyyyyyy
 Content-Type: application/json
 
 {
