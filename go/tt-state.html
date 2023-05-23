@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>tt-state.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BAstate">状态广场state</h1>
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+<!-- code_chunk_output -->
+<ul>
+<li><a href="#%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BAstate">状态广场state</a>
+<ul>
+<li><a href="#%E4%B8%80%E4%BB%80%E4%B9%88%E6%98%AF%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA">一，什么是状态广场</a>
+<ul>
+<li><a href="#%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA%E7%9A%84%E4%B8%9A%E5%8A%A1%E7%9B%AE%E6%A0%87">状态广场的业务目标</a></li>
+<li><a href="#%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA%E7%9A%84%E8%A1%A8%E7%8E%B0%E5%BD%A2%E5%BC%8F">状态广场的表现形式</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%8C%E4%B8%BB%E8%A6%81%E6%9E%B6%E6%9E%84">二，主要架构</a></li>
+<li><a href="#%E4%B8%89%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">三，数据库&amp;数据结构</a>
+<ul>
+<li><a href="#%E6%95%B0%E6%8D%AE%E8%A1%A8">数据表</a>
+<ul>
+<li><a href="#%E4%B8%BB%E8%A6%81%E7%9A%84%E8%A1%A8">主要的表：</a></li>
+<li><a href="#state_likes---%E5%AD%98%E5%82%A8%E7%94%A8%E6%88%B7%E7%8A%B6%E6%80%81%E7%82%B9%E8%B5%9E">state_likes -- 存储用户状态点赞</a></li>
+<li><a href="#users---%E7%94%A8%E6%88%B7%E8%A1%A8%E5%9F%BA%E4%BA%8Edcluser-upsert%E7%BB%B4%E6%8A%A4%E7%94%A8%E6%88%B7%E7%AE%80%E8%A6%81%E4%BF%A1%E6%81%AF">users -- 用户表：基于dcl.user upsert维护用户简要信息</a></li>
+<li><a href="#state_emojs----%E7%8A%B6%E6%80%81%E8%A1%A8%E6%83%85%E8%A1%A8">state_emojs  -- 状态表情表</a></li>
+<li><a href="#state_emoj_categories--%E7%8A%B6%E6%80%81%E8%A1%A8%E6%83%85%E5%88%86%E7%B1%BB%E8%A1%A8">state_emoj_categories --状态表情分类表</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%9B%9B%E6%8E%A5%E5%8F%A3%E9%80%BB%E8%BE%91">四，接口&amp;逻辑</a>
+<ul>
+<li><a href="#%E6%B6%89%E5%8F%8A%E7%9A%84%E6%8E%A5%E5%8F%A3%E7%AE%80%E4%BB%8B">涉及的接口简介</a></li>
+<li><a href="#%E6%8E%A5%E5%8F%A3%E9%80%BB%E8%BE%91%E4%BB%8B%E7%BB%8D">接口逻辑介绍</a>
+<ul>
+<li><a href="#%E5%8F%91%E8%A1%A8%E7%8A%B6%E6%80%81post-v2usersuidstates">发表状态：post /v2/users/:uid/states</a></li>
+<li><a href="#%E8%8E%B7%E5%8F%96%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA%E7%94%A8%E6%88%B7get-v2state">获取状态广场用户：get /v2/state</a>
+<ul>
+<li><a href="#get-v2statesearchsquare">get /v2/state?search=square</a></li>
+<li><a href="#get-v2statesearchquickchat">get /v2/state?search=quickchat</a></li>
+<li><a href="#get-v2statesearchfriend">get /v2/state?search=friend</a></li>
+</ul>
+</li>
+<li><a href="#%E7%8A%B6%E6%80%81%E7%82%B9%E8%B5%9Eput-v2usersuidstatessidlikesme">状态点赞：put v2/users/:uid/states/:sid/likes/me</a></li>
+<li><a href="#%E9%80%BB%E8%BE%91%E5%88%A0%E9%99%A4%E7%82%B9%E8%B5%9E-delete-v2usersuidstatessidlikesme">逻辑删除点赞 delete /v2/users/:uid/states/:sid/likes/me</a></li>
+<li><a href="#%E8%8E%B7%E5%8F%96%E8%8E%B7%E5%8F%96%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA%E7%9B%B2%E7%9B%92%E7%94%A8%E6%88%B7get-v2meets">获取获取状态广场盲盒用户：get /v2/meets</a></li>
+</ul>
+</li>
+<li><a href="#consumer%E9%80%BB%E8%BE%91">consumer逻辑</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%94%E5%AD%98%E5%9C%A8%E7%9A%84%E5%B0%8F%E9%97%AE%E9%A2%98">五，存在的小问题</a></li>
+</ul>
+</li>
+</ul>
+<!-- /code_chunk_output -->
+<!-- [TOC] -->
+<h2 id="%E4%B8%80%E4%BB%80%E4%B9%88%E6%98%AF%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA">一，什么是状态广场</h2>
+<h3 id="%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA%E7%9A%84%E4%B8%9A%E5%8A%A1%E7%9B%AE%E6%A0%87">状态广场的业务目标</h3>
+<blockquote>
+<p>1，构建低门槛的发布场景，激活存量关系，帮助已经建立关系的用户快速找到可聊天的人<br>
+2，面对陌生人建联场景，弥补现有异步社交场景的不足，探索实时化社交方向</p>
+</blockquote>
+<h3 id="%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA%E7%9A%84%E8%A1%A8%E7%8E%B0%E5%BD%A2%E5%BC%8F">状态广场的表现形式</h3>
+<p><img src="./res/addState.jpeg" alt=""></p>
+<center>图一</center>
+<p><img src="./res/select-state.jpeg" alt=""></p>
+<center>图二</center>
+<p><img src="./res/post-state.jpeg" alt=""></p>
+<center>图三</center>
+<p><img src="./res/app-page-state0.jpeg" alt=""></p>
+<center>图四</center>
+<p><img src="./res/app-page-states1.jpeg" alt=""></p>
+<center>图五</center>
+<p><img src="./res/app-page-state-msg.jpeg" alt=""></p>
+<center>图六</center>
+<p><img src="./res/state-push.png" alt=""></p>
+<center>图七</center>
+<blockquote>
+<p>1，发布的状态审核通过后，会给followed的异性发push消息</p>
+</blockquote>
+<h2 id="%E4%BA%8C%E4%B8%BB%E8%A6%81%E6%9E%B6%E6%9E%84">二，主要架构</h2>
+<p><img src="./res/state-framework.jpeg" alt=""></p>
+<center>图八</center>
+<ul>
+<li><a href="https://dba-g.p1staff.com/d/redis-cluster/redis-cluster?from=now-1h&amp;to=now&amp;var-job=redis&amp;orgId=1&amp;var-cls=redis-moment-tt&amp;var-mode=standalone">查看redis-ring模式-会存在数据不均衡问题</a></li>
+<li><a href="https://dba-g.p1staff.com/d/pgsql-cluster/pgsql-cluster?from=now-1h&amp;to=now&amp;orgId=1&amp;var-cls=pg-state-tt&amp;var-primary=pg-state-tt-1">查看stateDB</a></li>
+</ul>
+<h2 id="%E4%B8%89%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">三，数据库&amp;数据结构</h2>
+<blockquote>
+<p>1，服务器的DB版本：PostgreSQL 13.5 （最新 PostgreSQL 15.2）</p>
+</blockquote>
+<h3 id="%E6%95%B0%E6%8D%AE%E8%A1%A8">数据表</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Schema</th>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">yay</td>
+<td style="text-align:center">medias</td>
+<td style="text-align:center">table</td>
+<td style="text-align:left">dbuser_dba</td>
+</tr>
+<tr>
+<td style="text-align:center">yay</td>
+<td style="text-align:center">rel_id_seq</td>
+<td style="text-align:center">sequence</td>
+<td style="text-align:left">dbuser_dba</td>
+</tr>
+<tr>
+<td style="text-align:center">yay</td>
+<td style="text-align:center">state_emoj_categories</td>
+<td style="text-align:center">table</td>
+<td style="text-align:left">dbuser_dba</td>
+</tr>
+<tr>
+<td style="text-align:center">yay</td>
+<td style="text-align:center">state_emoj_categories_id_seq</td>
+<td style="text-align:center">sequence</td>
+<td style="text-align:left">dbuser_dba</td>
+</tr>
+<tr>
+<td style="text-align:center">yay</td>
+<td style="text-align:center">state_emojs</td>
+<td style="text-align:center">table</td>
+<td style="text-align:left">dbuser_dba</td>
+</tr>
+<tr>
+<td style="text-align:center">yay</td>
+<td style="text-align:center">state_emojs_id_seq</td>
+<td style="text-align:center">sequence</td>
+<td style="text-align:left">dbuser_dba</td>
+</tr>
+<tr>
+<td style="text-align:center">yay</td>
+<td style="text-align:center">state_likes</td>
+<td style="text-align:center">table</td>
+<td style="text-align:left">dbuser_dba</td>
+</tr>
+<tr>
+<td style="text-align:center">yay</td>
+<td style="text-align:center">states</td>
+<td style="text-align:center">table</td>
+<td style="text-align:left">dbuser_dba</td>
+</tr>
+<tr>
+<td style="text-align:center">yay</td>
+<td style="text-align:center">users</td>
+<td style="text-align:center">table</td>
+<td style="text-align:left">dbuser_dba</td>
+</tr>
+</tbody>
+</table>
+<h4 id="%E4%B8%BB%E8%A6%81%E7%9A%84%E8%A1%A8">主要的表：</h4>
+<blockquote>
+<p>1，users表：来源dcl.users upsert,或发布动态的新用户
+2，states表：24小时内状态记录，逻辑删除
+3，state_like表：状态点赞表</p>
+</blockquote>
+<h4 id="states----%E5%AD%98%E5%82%A8%E7%94%A8%E6%88%B7%E5%8F%91%E8%A1%A8%E7%9A%84%E7%8A%B6%E6%80%81%E6%93%8D%E4%BD%9C%E4%BB%A524%E5%B0%8F%E6%97%B6%E4%B8%BA%E9%99%90">states -- 存储用户发表的状态，操作以24小时为限</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Column</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:center">Collation</th>
+<th style="text-align:center">Nullable</th>
+<th style="text-align:left">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">id</td>
+<td style="text-align:center">bigint</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">next_id()</td>
+</tr>
+<tr>
+<td style="text-align:center">user_id</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">value</td>
+<td style="text-align:center">character varying(2000)</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">location</td>
+<td style="text-align:center">json</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">emotion</td>
+<td style="text-align:center">json</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">text_theme</td>
+<td style="text-align:center">json</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">media_type</td>
+<td style="text-align:center">media_type</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">status</td>
+<td style="text-align:center">status</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">'default'::status</td>
+</tr>
+<tr>
+<td style="text-align:center">created_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+<tr>
+<td style="text-align:center">updated_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+<tr>
+<td style="text-align:center">biz</td>
+<td style="text-align:center">biz</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">'moment'::biz</td>
+</tr>
+<tr>
+<td style="text-align:center">emotion_id</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:center">geo_location</td>
+<td style="text-align:center">geometry</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table>
+<pre class="hljs"><code><div>Indexes:
+    &quot;states_pkey&quot; PRIMARY KEY, btree (id)
+    &quot;state_geo_location_idx&quot; gist (geo_location)
+    &quot;states_biz_idx&quot; btree (biz)
+    &quot;states_created_time_geo_location_idx&quot; gist (created_time, geo_location)
+    &quot;states_created_time_idx&quot; btree (created_time)
+    &quot;states_created_time_idx1&quot; btree (created_time) WHERE status = 'default'::status AND biz = 'moment'::biz AND media_type = 'text'::media_type
+    &quot;states_status_idx&quot; btree (status) WHERE status &lt;&gt; ALL (ARRAY['deleted'::status, 'hidden'::status, 'pending'::status])
+    &quot;states_user_id_idx&quot; btree (user_id)
+</div></code></pre>
+<blockquote>
+<p>1, status:hidden, pending, default,deleted<br>
+2, media_type:image, video, text<br>
+3, biz:moment</p>
+</blockquote>
+<h4 id="statelikes----%E5%AD%98%E5%82%A8%E7%94%A8%E6%88%B7%E7%8A%B6%E6%80%81%E7%82%B9%E8%B5%9E">state_likes -- 存储用户状态点赞</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">Column</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:center">Collation</th>
+<th style="text-align:center">Nullable</th>
+<th style="text-align:left">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">id</td>
+<td style="text-align:center">bigint</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">next_id()</td>
+</tr>
+<tr>
+<td style="text-align:right">user_id</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">state_user_id</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">state_id</td>
+<td style="text-align:center">bigint</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">recalled</td>
+<td style="text-align:center">boolean</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">false</td>
+</tr>
+<tr>
+<td style="text-align:right">status</td>
+<td style="text-align:center">status</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">'default'::status</td>
+</tr>
+<tr>
+<td style="text-align:right">created_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+<tr>
+<td style="text-align:right">updated_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+</tbody>
+</table>
+<pre class="hljs"><code><div>Indexes:
+    &quot;state_likes_pkey&quot; PRIMARY KEY, btree (id)
+    &quot;state_likes_state_id_user_id_unique_idx&quot; UNIQUE, btree (state_id, user_id)
+    &quot;state_likes_user_id_idx&quot; btree (user_id)
+    &quot;state_likes_user_id_idx1&quot; btree (user_id) WHERE status = 'default'::status
+</div></code></pre>
+<h4 id="users----%E7%94%A8%E6%88%B7%E8%A1%A8%E5%9F%BA%E4%BA%8Edcluser-upsert%E7%BB%B4%E6%8A%A4%E7%94%A8%E6%88%B7%E7%AE%80%E8%A6%81%E4%BF%A1%E6%81%AF">users -- 用户表：基于dcl.user upsert维护用户简要信息</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">Column</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:center">Collation</th>
+<th style="text-align:center">Nullable</th>
+<th style="text-align:left">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">id</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">gender</td>
+<td style="text-align:center">gender</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">birthdate</td>
+<td style="text-align:center">date</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">status</td>
+<td style="text-align:center">user_status</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">'default'::user_status</td>
+</tr>
+<tr>
+<td style="text-align:right">created_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+<tr>
+<td style="text-align:right">updated_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+</tbody>
+</table>
+<pre class="hljs"><code><div>Indexes:
+    &quot;users_pkey&quot; PRIMARY KEY, btree (id)
+    &quot;users_birthdate_idx&quot; btree (birthdate)
+    &quot;users_status_idx&quot; btree (status) WHERE status &lt;&gt; ALL (ARRAY['banned'::user_status, 'inactivated'::user_status, 'deleted'::user_status, 'violation'::user_status, 'pending'::user_status])
+    &quot;yay_users_id_status&quot; btree (id) WHERE status = ANY (ARRAY['banned'::user_status, 'inactivated'::user_status, 'deleted'::user_status])
+</div></code></pre>
+<h4 id="stateemojs----%E7%8A%B6%E6%80%81%E8%A1%A8%E6%83%85%E8%A1%A8">state_emojs  -- 状态表情表</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">Column</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:center">Collation</th>
+<th style="text-align:center">Nullable</th>
+<th style="text-align:left">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">id</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">nextval('state_emojs_id_seq'::regclass)</td>
+</tr>
+<tr>
+<td style="text-align:right">emoji_url</td>
+<td style="text-align:center">character varying(1024)</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">emotion_text</td>
+<td style="text-align:center">character varying(64)</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">background_color</td>
+<td style="text-align:center">character varying[]</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left">'{}'::character varying[]</td>
+</tr>
+<tr>
+<td style="text-align:right">icon_color</td>
+<td style="text-align:center">character varying[]</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left">'{}'::character varying[]</td>
+</tr>
+<tr>
+<td style="text-align:right">category_id</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">display</td>
+<td style="text-align:center">boolean</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">false</td>
+</tr>
+<tr>
+<td style="text-align:right">sort</td>
+<td style="text-align:center">bigint</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:right">status</td>
+<td style="text-align:center">status</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">'default'::status</td>
+</tr>
+<tr>
+<td style="text-align:right">created_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+<tr>
+<td style="text-align:right">updated_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+</tbody>
+</table>
+<pre class="hljs"><code><div>Indexes:
+    &quot;state_emojs_pkey&quot; PRIMARY KEY, btree (id)
+    &quot;state_emojs_category_id_idx&quot; btree (category_id)
+    &quot;state_emojs_sort_idx&quot; btree (sort)
+    &quot;state_emojs_text_unique_key&quot; UNIQUE, btree (emotion_text)
+</div></code></pre>
+<blockquote>
+<p>1，moment rest get /v2/followConfig 调用state grpc获取</p>
+</blockquote>
+<h4 id="stateemojcategories---%E7%8A%B6%E6%80%81%E8%A1%A8%E6%83%85%E5%88%86%E7%B1%BB%E8%A1%A8">state_emoj_categories --状态表情分类表</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">Column</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:center">Collation</th>
+<th style="text-align:center">Nullable</th>
+<th style="text-align:left">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">id</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">nextval('state_emoj_categories_id_seq'::regclass)</td>
+</tr>
+<tr>
+<td style="text-align:right">name</td>
+<td style="text-align:center">character varying(64)</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">sort</td>
+<td style="text-align:center">bigint</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:right">display</td>
+<td style="text-align:center">boolean</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">false</td>
+</tr>
+<tr>
+<td style="text-align:right">status</td>
+<td style="text-align:center">status</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">'default'::status</td>
+</tr>
+<tr>
+<td style="text-align:right">created_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+<tr>
+<td style="text-align:right">updated_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+</tbody>
+</table>
+<pre class="hljs"><code><div>Indexes:
+    &quot;state_emoj_categories_pkey&quot; PRIMARY KEY, btree (id)
+    &quot;state_emoj_categories_name_unique_key&quot; UNIQUE, btree (name)
+    &quot;state_emoj_categories_sort_idx&quot; btree (sort)
+</div></code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">id</th>
+<th style="text-align:center">name</th>
+<th style="text-align:center">sort</th>
+<th style="text-align:center">display</th>
+<th style="text-align:center">status</th>
+<th style="text-align:center">created_time</th>
+<th style="text-align:left">updated_time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">16</td>
+<td style="text-align:center">热门状态</td>
+<td style="text-align:center">10</td>
+<td style="text-align:center">t</td>
+<td style="text-align:center">default</td>
+<td style="text-align:center">2022-12-02 08:23:25.396</td>
+<td style="text-align:left">2022-12-02 08:23:25.396</td>
+</tr>
+<tr>
+<td style="text-align:right">17</td>
+<td style="text-align:center">心情状态</td>
+<td style="text-align:center">9</td>
+<td style="text-align:center">t</td>
+<td style="text-align:center">default</td>
+<td style="text-align:center">2022-12-02 08:23:25.428</td>
+<td style="text-align:left">2022-12-02 08:23:25.428</td>
+</tr>
+<tr>
+<td style="text-align:right">18</td>
+<td style="text-align:center">我正在...</td>
+<td style="text-align:center">8</td>
+<td style="text-align:center">t</td>
+<td style="text-align:center">default</td>
+<td style="text-align:center">2022-12-02 08:23:25.482</td>
+<td style="text-align:left">2022-12-02 08:23:25.482</td>
+</tr>
+<tr>
+<td style="text-align:right">19</td>
+<td style="text-align:center">找人一起</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">t</td>
+<td style="text-align:center">default</td>
+<td style="text-align:center">2022-12-02 08:23:25.543</td>
+<td style="text-align:left">2022-12-02 08:23:25.543</td>
+</tr>
+</tbody>
+</table>
+<h4 id="medias">medias</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">Column</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:center">Collation</th>
+<th style="text-align:center">Nullable</th>
+<th style="text-align:left">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">id</td>
+<td style="text-align:center">bigint</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">next_id()</td>
+</tr>
+<tr>
+<td style="text-align:right">user_id</td>
+<td style="text-align:center">bigint</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">resource_type</td>
+<td style="text-align:center">resource_type</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">resource_id</td>
+<td style="text-align:center">bigint</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">index</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">location</td>
+<td style="text-align:center">json</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">country_id</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:right">picture_identifier</td>
+<td style="text-align:center">character varying(200)</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:right">picture_width</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:right">picture_height</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:right">picture_dhash</td>
+<td style="text-align:center">bigint</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:right">video_identifier</td>
+<td style="text-align:center">character varying(200)</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">''::character varying</td>
+</tr>
+<tr>
+<td style="text-align:right">video_width</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:right">video_height</td>
+<td style="text-align:center">integer</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:right">video_duration</td>
+<td style="text-align:center">double precision</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:right">shoot_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+<tr>
+<td style="text-align:right">status</td>
+<td style="text-align:center">status</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">'default'::status</td>
+</tr>
+<tr>
+<td style="text-align:right">created_time</td>
+<td style="text-align:center">timestamp without time zone</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">not null</td>
+<td style="text-align:left">timezone('UTC'::text, now())</td>
+</tr>
+</tbody>
+</table>
+<pre class="hljs"><code><div>Indexes:
+    &quot;medias_pkey&quot; PRIMARY KEY, btree (id)
+    &quot;medias_resource_id_type_index_idx&quot; btree (resource_id, resource_type, index)
+
+</div></code></pre>
+<h2 id="%E5%9B%9B%E6%8E%A5%E5%8F%A3%E9%80%BB%E8%BE%91">四，接口&amp;逻辑</h2>
+<h3 id="%E6%B6%89%E5%8F%8A%E7%9A%84%E6%8E%A5%E5%8F%A3%E7%AE%80%E4%BB%8B">涉及的接口简介</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">类型</th>
+<th style="text-align:center">接口名</th>
+<th style="text-align:center">httpMethod</th>
+<th style="text-align:left">备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/states</td>
+<td style="text-align:center">POST</td>
+<td style="text-align:left">发布状态</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/states</td>
+<td style="text-align:center">GET</td>
+<td style="text-align:left">如果http header中的 userId=uid，则自己看自己24小时内，没被删除的状态，否则看别人24小时内正常的状态</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/states/:sid</td>
+<td style="text-align:center">GET</td>
+<td style="text-align:left">获取userId（http header中的）下24小时内stateId=sid，没被逻辑删除的状态详情</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/states/:sid</td>
+<td style="text-align:center">POST</td>
+<td style="text-align:left">逻辑删除状态</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/states/:sid</td>
+<td style="text-align:center">DELETE</td>
+<td style="text-align:left">逻辑删除状态</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/states/:sid/likes/me</td>
+<td style="text-align:center">PUT</td>
+<td style="text-align:left">状态点赞</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/states/:sid/likes/me</td>
+<td style="text-align:center">DELETE</td>
+<td style="text-align:left">逻辑删除点赞</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/states/:sid/likes/me</td>
+<td style="text-align:center">POST</td>
+<td style="text-align:left">逻辑删除点赞，内部调用的DELETE</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/state-counters</td>
+<td style="text-align:center">PATCH</td>
+<td style="text-align:left">更新红点，cache.ClearUnreadState</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/state-counters</td>
+<td style="text-align:center">POST</td>
+<td style="text-align:left">同patch</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/users/:uid/state-counters</td>
+<td style="text-align:center">GET</td>
+<td style="text-align:left">获取红点，已废弃</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/states</td>
+<td style="text-align:center">GET</td>
+<td style="text-align:left">获取状态广场用户</td>
+</tr>
+<tr>
+<td style="text-align:right">rest</td>
+<td style="text-align:center">/v2/meets</td>
+<td style="text-align:center">GET</td>
+<td style="text-align:left">获取状态广场盲盒用户，请求量少，可能app上藏的太深了</td>
+</tr>
+<tr>
+<td style="text-align:right">grpc</td>
+<td style="text-align:center">StateService.FindByUserIds</td>
+<td style="text-align:center">GET</td>
+<td style="text-align:left">批量获取用户状态信息</td>
+</tr>
+<tr>
+<td style="text-align:right">grpc</td>
+<td style="text-align:center">StateEmotionService.FindAllStateEmotion</td>
+<td style="text-align:center">GET</td>
+<td style="text-align:left">分页获取状态emoji配置信息</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>1，红点逻辑：post state 会发dcl.state.userState ，审核之后，会发dcl.moderation.userState。dcl审核通过之后，给这个用户的matchedUsers，每个人都新增一个未读计数，并设置当前最新状态</p>
+</blockquote>
+<h3 id="%E6%8E%A5%E5%8F%A3%E9%80%BB%E8%BE%91%E4%BB%8B%E7%BB%8D">接口逻辑介绍</h3>
+<h4 id="%E5%8F%91%E8%A1%A8%E7%8A%B6%E6%80%81post-v2usersuidstates">发表状态：post /v2/users/:uid/states</h4>
+<p><img src="./res/rest-post-userState.jpeg" alt=""></p>
+<center>图九</center>
+<blockquote>
+<p>1，新用户，则存入用户表</p>
+</blockquote>
+<h4 id="%E8%8E%B7%E5%8F%96%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA%E7%94%A8%E6%88%B7get-v2state">获取状态广场用户：get /v2/state</h4>
+<p><img src="./res/app-page-states1.jpeg" alt=""></p>
+<center>图十</center>
+<p><img src="./res/rest-state.jpeg" alt="" title="接口抓包"></p>
+<center>图十一</center>
+<h5 id="get-v2statesearchsquare">get /v2/state?search=square</h5>
+<p><img src="./res/rest-get-state-square3.jpeg" alt=""></p>
+<center>图十二</center>
+<blockquote>
+<p>1，算分公式：((ST_DistanceSphere(ST_Point(?, ?), s.geo_location) / 5000)::integer + 5)*300 +
+((EXTRACT(EPOCH FROM CURRENT_TIMESTAMP AT TIME ZONE 'UTC' - s.created_time) / 600)::integer + 10) AS score<br>
+2，ab服务，还会调用chat的grpc获取用户过热等级，根据过热等级，继续过滤</p>
+</blockquote>
+<h5 id="get-v2statesearchquickchat">get /v2/state?search=quickchat</h5>
+<p><img src="./res/rest-get-state-quickchat2.jpeg" alt=""></p>
+<center>图十三</center>
+<h5 id="get-v2statesearchfriend">get /v2/state?search=friend</h5>
+<p><img src="./res/rest-get-state-friend2.jpeg" alt=""></p>
+<center>图十四</center>
+<h4 id="%E7%8A%B6%E6%80%81%E7%82%B9%E8%B5%9Eput-v2usersuidstatessidlikesme">状态点赞：put v2/users/:uid/states/:sid/likes/me</h4>
+<p><img src="./res/rest-put-userLike.jpeg" alt=""></p>
+<center>图十五</center>
+<h4 id="%E9%80%BB%E8%BE%91%E5%88%A0%E9%99%A4%E7%82%B9%E8%B5%9E-delete-v2usersuidstatessidlikesme">逻辑删除点赞 delete /v2/users/:uid/states/:sid/likes/me</h4>
+<p><img src="./res/rest-delete-userLike.jpeg" alt=""></p>
+<center>图十六</center>
+<h4 id="%E8%8E%B7%E5%8F%96%E8%8E%B7%E5%8F%96%E7%8A%B6%E6%80%81%E5%B9%BF%E5%9C%BA%E7%9B%B2%E7%9B%92%E7%94%A8%E6%88%B7get-v2meets">获取获取状态广场盲盒用户：get /v2/meets</h4>
+<p><img src="./res/rest-get-meet.jpeg" alt=""></p>
+<center>图十七</center>
+<h3 id="consumer%E9%80%BB%E8%BE%91">consumer逻辑</h3>
+<p><img src="./res/state-consumer.jpeg" alt=""></p>
+<center>图十八</center>
+<blockquote>
+<p>1，给异性follower push消息</p>
+</blockquote>
+<h2 id="%E4%BA%94%E5%AD%98%E5%9C%A8%E7%9A%84%E5%B0%8F%E9%97%AE%E9%A2%98">五，存在的小问题</h2>
+<blockquote>
+<p>1，广场的自动滑动的状态不支持手动自由滑动，或者滑动的不流畅<br>
+2，页面布局上，有的功能点藏的很深，应该告知引导或教育用户，例如盲盒，/v2/meets接口的qps很低</p>
+</blockquote>
+<p><img src="./res/app-page-states1.jpeg" alt=""></p>
+<center>图十九</center>
+
+</body>
+</html>
