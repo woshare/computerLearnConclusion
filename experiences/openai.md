@@ -111,6 +111,26 @@ in Large Language Models](https://arxiv.org/pdf/2201.11903.pdf)
 * [PromptHero](https://github.com/mattnigh/ChatGPT3-Free-Prompt-List)
 
 
+## prompt 的框架一：Basic Prompt Framework
+>查阅了非常多关于 ChatGPT prompt 的框架资料，我目前觉得写得最清晰的是 Elavis Saravia 总结的框架，他认为一个 prompt 里需包含以下几个元素：
+
+>1，Instruction（必须）： 指令，即你希望模型执行的具体任务。
+>2，Context（选填）： 背景信息，或者说是上下文信息，这可以引导模型做出更好的反应。
+>3，Input Data（选填）： 输入数据，告知模型需要处理的数据。
+>4，Output Indicator（选填）： 输出指示器，告知模型我们要输出的类型或格式。
+
+>只要你按照这个框架写 prompt ，模型返回的结果都不会差
+
+## prompt 的框架二：CRISPE Prompt Framework
+
+>CRISPE Framework，这个 framework 更加复杂，但完备性会比较高，比较适合用于编写 prompt 模板。CRISPE 分别代表以下含义：
+
+>1，CR： Capacity and Role（能力与角色）。你希望 ChatGPT 扮演怎样的角色。
+>2，I： Insight（洞察力），背景信息和上下文（坦率说来我觉得用 Context 更好）。
+>3，S： Statement（指令），你希望 ChatGPT 做什么。
+>4，P： Personality（个性），你希望 ChatGPT 以什么风格或方式回答你。
+>5，E： Experiment（尝试），要求 ChatGPT 为你提供多个答案。
+
 
 ## 大模型思维链（Chain-of-Thought）技术原理
 
