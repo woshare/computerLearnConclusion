@@ -10,6 +10,8 @@ uintptr：准确来讲，uintptr并不是指针，它是一个大小并不明确
 
 
 ## WaitGroup
+>state1: high 32 bits are counter, low 32 bits are waiter count.
+```
 type WaitGroup struct {
 	noCopy noCopy
 
@@ -31,6 +33,8 @@ type WaitGroup struct {
 //
 // Note that it must not be embedded, due to the Lock and Unlock methods.
 type noCopy struct{}
+
+```
 
 ### 《no copy机制》
 noCopy字段是空结构体，它并不会占用内存，编译器也不会对其进行字节填充。它主要是为了通过go vet工具来做静态编译检查，防止开发者在使用WaitGroup过程中对其进行了复制，从而导致的安全隐患

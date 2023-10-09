@@ -2,6 +2,8 @@
 
 * [prompt基本技巧](https://learningprompt.wiki/docs/chatGPT/tutorial-basics/%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF%20&%20%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7/scenario-1-ask-questions)
 * [openai最佳实践](https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-openai-api)
+* [prompt导论](https://www.promptingguide.ai/zh/techniques/ape)
+* [langchain](https://github.com/hwchase17/langchain)
 
 ## 什么是Prompt Engineering
 >在正式介绍Prompt技巧之前，需要先了解什么是Prompt Engineering。其中，Prompt是指我们提供给人工智能模型的输入，而Prompt Engineering是指设计和改进Prompt的过程。它包括设计提示、引导模型生成特定的语言风格或内容类型。
@@ -112,7 +114,7 @@ in Large Language Models](https://arxiv.org/pdf/2201.11903.pdf)
 
 
 ## prompt 的框架一：Basic Prompt Framework
->查阅了非常多关于 ChatGPT prompt 的框架资料，我目前觉得写得最清晰的是 Elavis Saravia 总结的框架，他认为一个 prompt 里需包含以下几个元素：
+>查阅了非常多关于 ChatGPT prompt 的框架资料，我目前觉得写得最清晰的是 Elavis Saravia 总结的框架，认为prompt 里需包含以下几个元素：
 
 >1，Instruction（必须）： 指令，即你希望模型执行的具体任务。
 >2，Context（选填）： 背景信息，或者说是上下文信息，这可以引导模型做出更好的反应。
